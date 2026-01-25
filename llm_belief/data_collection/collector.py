@@ -113,10 +113,22 @@ class PairwiseCollector:
         )
         return response.output_text
 
+    def _get_prompt_pair(
+        self,
+        labels: List[str],
+        profiles: Dict[str, Dict[str, Any]],
+        pair_id: int,
+    ) -> tuple[List[Dict[str, Any]], List[str]]:
+        """Return prompt pair/labels with alternating order."""
+        prompt_labels = labels if pair_id % 2 == 0 else [labels[1], labels[0]]
+        prompt_pair = [profiles[prompt_labels[0]], profiles[prompt_labels[1]]]
+        return prompt_pair, prompt_labels
+
     def collect_basic(
         self,
         start_idx: int,
         end_idx: int,
+        reasoning_effort: Optional[str] = None,
         output_file: Optional[str] = None,
     ) -> Path:
         """Run basic pairwise comparison experiment.
@@ -126,6 +138,7 @@ class PairwiseCollector:
         Args:
             start_idx: Starting pair index
             end_idx: Ending pair index (exclusive)
+            reasoning_effort: Optional reasoning effort override
             output_file: Optional output filename. Defaults to '{start}_{end}.csv'
 
         Returns:
@@ -169,13 +182,18 @@ class PairwiseCollector:
                 }
 
                 prompt_variant = pair_id % 10
+                prompt_pair, prompt_labels = self._get_prompt_pair(
+                    labels,
+                    profiles,
+                    pair_id,
+                )
                 prompt = get_prompt_variant(
                     prompt_variant,
-                    list(profiles.values()),
-                    labels,
+                    prompt_pair,
+                    prompt_labels,
                 )
 
-                res = self._call_api(prompt)
+                res = self._call_api(prompt, reasoning_effort=reasoning_effort)
 
                 call_time = datetime.now()
                 logger.info(
@@ -210,6 +228,7 @@ class PairwiseCollector:
         self,
         real_profile_id: str,
         n_makeup: Optional[int] = None,
+        reasoning_effort: Optional[str] = None,
         output_file: Optional[str] = None,
     ) -> Path:
         """Run real vs. makeup profile comparison experiment.
@@ -220,6 +239,7 @@ class PairwiseCollector:
         Args:
             real_profile_id: ID of the real iPhone profile (e.g., 'iPhone 16 Pro')
             n_makeup: Number of makeup profiles to compare. Defaults to config value.
+            reasoning_effort: Optional reasoning effort override
             output_file: Optional output filename
 
         Returns:
@@ -298,13 +318,18 @@ class PairwiseCollector:
                 }
 
                 prompt_variant = pair_id % 10
+                prompt_pair, prompt_labels = self._get_prompt_pair(
+                    labels,
+                    profiles,
+                    pair_id,
+                )
                 prompt = get_prompt_variant(
                     prompt_variant,
-                    list(profiles.values()),
-                    labels,
+                    prompt_pair,
+                    prompt_labels,
                 )
 
-                res = self._call_api(prompt)
+                res = self._call_api(prompt, reasoning_effort=reasoning_effort)
 
                 call_time = datetime.now()
                 logger.info(
@@ -337,20 +362,25 @@ class PairwiseCollector:
     def collect_top(
         self,
         real_profile_id: str,
+        n_top: Optional[int] = None,
         score_column: str = "MLP_score",
+        reasoning_effort: Optional[str] = None,
         output_file: Optional[str] = None,
     ) -> Path:
         """Run real vs. top-scored profile comparison experiment.
 
         Args:
             real_profile_id: ID of the real iPhone profile
+            n_top: Number of top profiles to compare. Defaults to config value.
             score_column: Column name for sorting profiles
+            reasoning_effort: Optional reasoning effort override
             output_file: Optional output filename
 
         Returns:
             Path to output CSV file
         """
-        n_top = self.cfg.get('collection', 'default_n_top', default=50)
+        if n_top is None:
+            n_top = self.cfg.get('collection', 'default_n_top', default=50)
 
         # Setup logging
         safe_id = real_profile_id.replace(" ", "_")
@@ -401,13 +431,18 @@ class PairwiseCollector:
                 }
 
                 prompt_variant = pair_id % 10
+                prompt_pair, prompt_labels = self._get_prompt_pair(
+                    labels,
+                    profiles,
+                    pair_id,
+                )
                 prompt = get_prompt_variant(
                     prompt_variant,
-                    list(profiles.values()),
-                    labels,
+                    prompt_pair,
+                    prompt_labels,
                 )
 
-                res = self._call_api(prompt)
+                res = self._call_api(prompt, reasoning_effort=reasoning_effort)
 
                 call_time = datetime.now()
                 logger.info(
@@ -444,7 +479,7 @@ class PairwiseCollector:
         scored_limit: int = 20000,
         output_file: Optional[str] = None,
         context_date: str = "2025-03-15",
-        reasoning_effort: str = "low",
+        reasoning_effort: Optional[str] = None,
     ) -> Path:
         """Run fixreal with injected context from a text file.
 
@@ -455,7 +490,7 @@ class PairwiseCollector:
             scored_limit: Max rows from scored profiles to consider
             output_file: Optional output filename
             context_date: Date to include in system context
-            reasoning_effort: Override reasoning effort for this run
+            reasoning_effort: Optional reasoning effort override
         """
         safe_id = real_profile_id.replace(" ", "_")
         logger = get_experiment_logger("reali16_fixreal", safe_id)
@@ -580,7 +615,7 @@ class PairwiseCollector:
         rag_per_chars: int = 1200,
         rag_embed_model: str = "text-embedding-3-small",
         output_file: Optional[str] = None,
-        reasoning_effort: str = "low",
+        reasoning_effort: Optional[str] = None,
     ) -> Path:
         """Run fixreal with RAG context prepended."""
         try:
@@ -721,10 +756,15 @@ class PairwiseCollector:
                 }
 
                 prompt_variant = pair_id % 10
+                prompt_pair, prompt_labels = self._get_prompt_pair(
+                    labels,
+                    profiles,
+                    pair_id,
+                )
                 base_prompt = get_prompt_variant(
                     prompt_variant,
-                    list(profiles.values()),
-                    labels,
+                    prompt_pair,
+                    prompt_labels,
                 )
                 final_prompt, sources = _prepend_rag_to_prompt(base_prompt)
                 res = self._call_api(final_prompt, reasoning_effort=reasoning_effort)

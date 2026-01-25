@@ -27,6 +27,12 @@ def read_arguments():
     parser.add_argument("--n_makeup", type=int, help="Number of makeup profiles")
     parser.add_argument("--n_top", type=int, help="Number of top scored profiles")
     parser.add_argument("--shift", type=int, default=0, help="Shift id for profiles")
+    parser.add_argument(
+        "--reasoning-effort",
+        type=str,
+        default="medium",
+        help="Override reasoning effort",
+    )
 
     args = parser.parse_args()
     if args.start is not None and args.end is None:
@@ -40,9 +46,14 @@ real_profile_id, account = (
     args.account,
 )
 
-llm = init_chat_model("gpt-5-nano", temperature = 1, reasoning_effort = 'low', model_provider="openai")
+llm = init_chat_model(
+    "gpt-5-nano",
+    temperature=1,
+    reasoning_effort=args.reasoning_effort,
+    model_provider="openai",
+)
 
-# llm = init_chat_model("gpt-5-nano",api_key=os.environ.get(account), temperature = 1, reasoning_effort = 'low', model_provider="openai")
+# llm = init_chat_model("gpt-5-nano",api_key=os.environ.get(account), temperature = 1, reasoning_effort=args.reasoning_effort, model_provider="openai")
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 vector_store = InMemoryVectorStore(embeddings)
 

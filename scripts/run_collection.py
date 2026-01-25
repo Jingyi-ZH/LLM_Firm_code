@@ -12,7 +12,7 @@ Usage:
     python scripts/run_collection.py --experiment fixreal --real-profile "iPhone 16 Pro"
 
     # Real vs. top-scored profiles
-    python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro"
+    python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro" --n-top 50
 
     # Real vs. makeup with injected context
     python scripts/run_collection.py --experiment context --real-profile "iPhone 16 Pro" \
@@ -54,8 +54,8 @@ Examples:
     # Real vs. makeup profiles
     python scripts/run_collection.py --experiment fixreal --real-profile "iPhone 16 Pro"
 
-    # Real vs. top profiles
-    python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro"
+    # Real vs. top-50 profiles
+    python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro" --n-top 50
 
     # Real vs. makeup with injected context
     python scripts/run_collection.py --experiment context --real-profile "iPhone 16 Pro" \
@@ -103,6 +103,11 @@ Examples:
         "--n-makeup",
         type=int,
         help="Number of makeup profiles for fixreal experiment",
+    )
+    parser.add_argument(
+        "--n-top",
+        type=int,
+        help="Number of top profiles for top experiment",
     )
     parser.add_argument(
         "--context",
@@ -169,6 +174,11 @@ Examples:
         type=str,
         help="Comma-separated API key env vars for parallel basic runs (optional)",
     )
+    parser.add_argument(
+        "--reasoning-effort",
+        type=str,
+        help="Override reasoning effort (optional)",
+    )
 
     args = parser.parse_args()
 
@@ -211,6 +221,7 @@ Examples:
                             collector.collect_basic,
                             start_idx=sub_start,
                             end_idx=sub_end,
+                            reasoning_effort=args.reasoning_effort,
                             output_file=output_file,
                         )
                     )
@@ -223,6 +234,7 @@ Examples:
         output_path = collector.collect_basic(
             start_idx=args.start,
             end_idx=args.end,
+            reasoning_effort=args.reasoning_effort,
             output_file=args.output,
         )
     elif args.experiment == "fixreal":
@@ -230,12 +242,15 @@ Examples:
         output_path = collector.collect_fixreal(
             real_profile_id=args.real_profile,
             n_makeup=args.n_makeup,
+            reasoning_effort=args.reasoning_effort,
             output_file=args.output,
         )
     elif args.experiment == "top":
         collector = PairwiseCollector(api_key_env_var=args.api_key_env)
         output_path = collector.collect_top(
             real_profile_id=args.real_profile,
+            n_top=args.n_top,
+            reasoning_effort=args.reasoning_effort,
             output_file=args.output,
         )
     elif args.experiment == "context":
@@ -247,6 +262,7 @@ Examples:
             scored_limit=args.scored_limit or 20000,
             output_file=args.output,
             context_date=args.context_date or "2025-03-15",
+            reasoning_effort=args.reasoning_effort,
         )
     elif args.experiment == "rag":
         rag_script = _project_root / "RAG_langchain" / "main_rag_langchain.py"
@@ -261,6 +277,8 @@ Examples:
             "--account",
             account,
         ]
+        if args.reasoning_effort:
+            cmd += ["--reasoning-effort", args.reasoning_effort]
         if args.n_makeup is not None:
             cmd += ["--n_makeup", str(args.n_makeup)]
         subprocess.run(cmd, check=True)
@@ -276,6 +294,7 @@ Examples:
             rag_k=args.rag_k or 3,
             rag_per_chars=args.rag_per_chars or 1200,
             rag_embed_model=args.rag_embed_model or "text-embedding-3-small",
+            reasoning_effort=args.reasoning_effort,
             output_file=args.output,
         )
 
