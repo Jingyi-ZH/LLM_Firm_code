@@ -242,9 +242,9 @@ class PairwiseCollector:
             raise ValueError(f"Real profile '{real_profile_id}' not found")
         real_profile = format_profile_for_prompt(real_profiles[real_profile_id])
 
-        # Load scored profiles for comparison
-        scored_file = self.cfg.get('collection', 'scored_profiles_file')
-        scored_df = pd.read_csv(get_data_path(scored_file))
+        # Load generated profiles for comparison
+        profiles_file = self.cfg.get('collection', 'profiles_file')
+        scored_df = pd.read_csv(get_data_path(profiles_file))
         sample_ids_file = f"sample{n_makeup}_profile_ids.npy"
         sample_ids = resample_profile_ids(
             scored_df,
