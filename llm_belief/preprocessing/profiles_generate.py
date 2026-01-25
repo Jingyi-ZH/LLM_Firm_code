@@ -56,6 +56,7 @@ class ProfileGenerator:
 
         profiles = self.generate()
         df = pd.DataFrame(profiles)
+        df["profile_id"] = range(len(df))
 
         out_path = get_data_path(output_file)
         df.to_csv(out_path, index=False)
