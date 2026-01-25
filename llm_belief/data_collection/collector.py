@@ -236,16 +236,11 @@ class PairwiseCollector:
         logger.info(f"Using model: {self.model} with temperature: {self.temperature}")
         logger.info(f"Real profile: {real_profile_id}, n_makeup: {n_makeup}")
 
-        # Load real profiles
-        real_file = self.cfg.get('collection', 'real_profiles_file')
-        real_df = pd.read_csv(get_data_path(real_file))
-        real_df = real_df.set_index('real model')
-        real_df = rearrange_dataframe(real_df)
-
-        if real_profile_id not in real_df.index:
+        # Load real profiles from config
+        real_profiles = get_real_profiles()
+        if real_profile_id not in real_profiles:
             raise ValueError(f"Real profile '{real_profile_id}' not found")
-
-        real_profile = real_df.loc[real_profile_id].to_dict()
+        real_profile = format_profile_for_prompt(real_profiles[real_profile_id])
 
         # Load scored profiles for comparison
         scored_file = self.cfg.get('collection', 'scored_profiles_file')
@@ -363,16 +358,11 @@ class PairwiseCollector:
         logger.info(f"Using model: {self.model} with temperature: {self.temperature}")
         logger.info(f"Real profile: {real_profile_id}, n_top: {n_top}")
 
-        # Load real profiles
-        real_file = self.cfg.get('collection', 'real_profiles_file')
-        real_df = pd.read_csv(get_data_path(real_file))
-        real_df = real_df.set_index('real model')
-        real_df_display = rearrange_dataframe(real_df.iloc[:, :10])
-
-        if real_profile_id not in real_df_display.index:
+        # Load real profiles from config
+        real_profiles = get_real_profiles()
+        if real_profile_id not in real_profiles:
             raise ValueError(f"Real profile '{real_profile_id}' not found")
-
-        real_profile = real_df_display.loc[real_profile_id].to_dict()
+        real_profile = format_profile_for_prompt(real_profiles[real_profile_id])
 
         # Load and sort scored profiles
         scored_file = self.cfg.get('collection', 'scored_profiles_file')
@@ -613,14 +603,11 @@ class PairwiseCollector:
         if not rag_faiss or not rag_meta:
             raise ValueError("RAG_FAISS and RAG_META must be provided for RAG runs.")
 
-        # Load real profiles
-        real_file = self.cfg.get("collection", "real_profiles_file")
-        real_df = pd.read_csv(get_data_path(real_file))
-        real_df = real_df.set_index("real model")
-        real_df = rearrange_dataframe(real_df)
-        if real_profile_id not in real_df.index:
+        # Load real profiles from config
+        real_profiles = get_real_profiles()
+        if real_profile_id not in real_profiles:
             raise ValueError(f"Real profile '{real_profile_id}' not found")
-        real_profile = real_df.loc[real_profile_id].to_dict()
+        real_profile = format_profile_for_prompt(real_profiles[real_profile_id])
 
         # Load scored profiles and filter
         scored_file = self.cfg.get("collection", "scored_profiles_file")

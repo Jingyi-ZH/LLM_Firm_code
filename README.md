@@ -166,7 +166,7 @@ LLM_Firm_code/
 ├── RAG_langchain/          # RAG scripts and utilities
 ├── data/                   # Data files
 │   ├── profiles_shuffled.csv
-│   ├── real_profiles.csv
+│   ├── real_profiles.csv   # Legacy (real profiles now in config/config.yaml)
 │   ├── scored_profiles_shuffled.csv
 │   ├── re16.txt            # Level 1 knowledge injected into prompts
 │   └── re16ru17.txt         # Level 2 knowledge injected into prompts

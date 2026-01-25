@@ -35,7 +35,6 @@ openai:
 # ===================
 collection:
   profiles_file: "profiles_shuffled.csv"
-  real_profiles_file: "real_profiles.csv"
   scored_profiles_file: "scored_profiles_shuffled.csv"
   num_prompt_variants: 10
   default_n_makeup: 5000
