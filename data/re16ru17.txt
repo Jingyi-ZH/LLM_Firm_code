@@ -1,0 +1,50 @@
+iPhone 16:
+- Display: 6.1" Super Retina XDR OLED. Peak brightness: ~1000 nits SDR, ~1600 nits HDR, ~2000 nits outdoor peak.
+- Chipset: A18 (6-core CPU: 2 performance + 4 efficiency; 5-core GPU; 16-core Neural Engine for Apple Intelligence features).
+- Camera: Dual-camera system.
+  - Main: 48MP (24/48MP output options), sensor-shift optical stabilization, high low-light efficiency, and focus pixel coverage.
+  - 2x telephoto is produced using in-sensor crop (not optical).
+  - Ultrawide: 12MP, ~120° FoV.
+- Key Functional Features: Camera Control button, USB-C port, Apple Intelligence integration, Face ID, Action button removed, IP68 water/dust resistance.
+
+iPhone 16 Plus:
+- Display: 6.7" Super Retina XDR OLED with same brightness and color characteristics as standard iPhone 16.
+- Chipset: A18 (same as iPhone 16).
+- Battery: Significantly higher endurance compared to iPhone 16 due to larger chassis.
+- Camera configuration identical to iPhone 16.
+- Target Use Case: Larger viewing area, longer battery endurance, same performance tier.
+
+iPhone 16 Pro:
+- Display: 6.3" Super Retina XDR OLED, Always-On Display, 120Hz ProMotion adaptive refresh rate (1–120 Hz).
+- Chipset: A18 Pro (6-core CPU + 6-core GPU, higher GPU throughput, and improved machine learning acceleration compared to A18).
+- Build: Premium materials and reduced bezels relative to non-Pro models.
+- Camera System (Triple):
+  - Main: 48MP, advanced computational photography pipeline.
+  - Ultrawide: 48MP, significantly improved macro performance and low-light sharpness.
+  - Telephoto: 12MP 5x optical using tetraprism folded lens system; sensor-shift stabilization with 3D angular correction.
+  - Zoom Range: Up to 25x digital with enhanced stabilization.
+- General Positioning: Designed for professional and enthusiast camera users and users prioritizing motion smoothness and GPU performance.
+
+iPhone 16 Pro Max:
+- Display: 6.9" Super Retina XDR OLED, Always-On, ProMotion 1–120Hz.
+- Chipset: A18 Pro (same as 16 Pro).
+- Battery: Largest battery among the lineup; optimized for endurance and sustained performance.
+- Camera System: Same triple system as iPhone 16 Pro, with slightly improved thermal headroom for extended telephoto video recording stability.
+- Positioning: Maximum screen, maximum battery, same camera capabilities as 16 Pro but more stable over long sessions.
+
+Performance Snapshot (Geekbench Multi-Core):
+- iPhone 16 Pro: ~8585
+- iPhone 16 Pro Max: ~8506
+- iPhone 16: ~8215
+- iPhone 16 Plus: ~8213
+Interpretation: A18 Pro devices are moderately faster in sustained GPU and multi-core workloads; A18 devices remain efficient and suitable for everyday use.
+
+Early iPhone 17 Expectations (rumored):
+The iPhone 17 lineup, expected to launch in September 2025, includes four models: the standard iPhone 17, the ultra-thin iPhone 17 Air (also referred to as iPhone 17 Slim), the iPhone 17 Pro, and the iPhone 17 Pro Max, replacing the Plus model with the slimmer variant. 
+Key design changes involve an aluminum center frame across the series, with the iPhone 17 Air featuring a plastic front cover and aluminum back for enhanced durability and reduced thickness—potentially as slim as 5.1mm, making it Apple's thinnest iPhone yet—while lacking a physical SIM tray due to space constraints. 
+Display upgrades include larger sizes (6.27-inch for iPhone 17 and Air, 6.65-inch for Pro, 6.86-inch for Pro Max), ProMotion 120Hz refresh rates on all models for smoother scrolling and video, and a new super-hard anti-reflective, scratch-resistant coating superior to current Ceramic Shield. 
+Chipsets will feature Apple's A19 series on an advanced N3P 3nm process for improved efficiency and performance, with the Pro and Pro Max using A19 Pro variants. RAM configurations vary by rumor: potentially 12GB for Pro models (or exclusively Pro Max) and 8GB for standard and Air, enabling better multitasking and AI capabilities. 
+Connectivity highlights Apple's first in-house 5G modem in the iPhone 17 Air (limited to sub-6GHz with up to 4Gb/s speeds, no mmWave), custom Wi-Fi 7 chips across all models for faster speeds (up to 40Gb/s) and lower latency using 2.4GHz/5GHz/6GHz bands simultaneously, plus Bluetooth 5.3; 
+eSIM-only expansion to more countries is anticipated, removing physical SIM slots in select regions. Camera improvements encompass a 24-megapixel front-facing lens with six elements for sharper selfies on all models, a single 48-megapixel rear lens on the Air, and the Pro Max boasting three 48-megapixel sensors (Wide, Ultra Wide, Tetraprism Telephoto) for superior detail; 
+at least one model may include a mechanical aperture for adjustable depth-of-field and better low-light performance, while 5x optical zoom remains Pro-exclusive. Battery and charging features easier-to-remove adhesive on Pro models (via low-voltage loosening) and up to 35W wired speeds unchanged from prior generations. 
+Pricing positions the Air as more affordable than Pro models, starting the Pro at $999. Post-launch, the 2026 iPhone 18 Pro may add variable aperture cameras, an upgraded C2 modem with mmWave, and potential foldable designs, building on these advancements to maintain Apple's innovation trajectory in premium smartphones.

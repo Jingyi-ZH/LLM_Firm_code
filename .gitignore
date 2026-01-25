@@ -1,0 +1,132 @@
+# =========================
+# OS generated files
+# =========================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# =========================
+# Python cache / packages
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# =========================
+# Virtual environments
+# =========================
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# =========================
+# Jupyter Notebook
+# =========================
+.ipynb_checkpoints/
+*.ipynb.json
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+*.code-workspace
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# Testing
+# =========================
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+
+# =========================
+# Documentation
+# =========================
+docs/_build/
+
+# =========================
+# Archives
+# =========================
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials.json
+
+# =========================
+# Project-specific
+# =========================
+local_notebook/
+slurm_out/
+gitcheck.md
+REFACTORING_PLAN.md
+RAG_langchain/raw_material/archived/
+RAG_langchain/wayback_fetch/wayback_downloads/
+
+# =========================
+# Data / Analysis Results
+# =========================
+*.csv
+*.xlsx
+*.png
+*.jpg
+*.jpeg
+plot/*
+!plot/.gitkeep
+output/*
+logs/*
+!output/.gitkeep
+!logs/.gitkeep
+
+# Trained models (large files)
+models/*.pt
+models/*.pth
+models/*.pkl
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.npy
+*.pkl
+*.jsonl
+*.faiss
+
+# Old git config backup
+config.git.bak
+/src/
+/analysis/
+checklist.md
+/legacy/

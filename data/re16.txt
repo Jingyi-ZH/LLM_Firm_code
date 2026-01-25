@@ -1,0 +1,5 @@
+Released iPhone 16 lineup key specifications:
+- iPhone 16: battery life 22 hours video playback; screen size 6.1 inches; thickness 7.8 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 2x; ultrawide camera equipped; Geekbench multicore score 8205; RAM 8 GB; price $899.
+- iPhone 16 Plus: battery life 27 hours video playback; screen size 6.7 inches; thickness 7.8 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 2x; ultrawide camera equipped; Geekbench multicore score 8208; RAM 8 GB; price $999.
+- iPhone 16 Pro: battery life 27 hours video playback; screen size 6.3 inches; thickness 8.25 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 5x; ultrawide camera equipped; Geekbench multicore score 8581; RAM 8 GB; price $1099.
+- iPhone 16 Pro Max: battery life 33 hours video playback; screen size 6.9 inches; thickness 8.25 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 5x; ultrawide camera equipped; Geekbench multicore score 8504; RAM 8 GB; price $1199.

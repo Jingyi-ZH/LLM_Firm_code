@@ -1,0 +1,196 @@
+# ===================
+# Project Configuration
+# ===================
+project:
+  name: "LLM Belief Elicitation"
+  random_seed: 2025
+
+# ===================
+# Path Configuration (relative to project root)
+# ===================
+paths:
+  data_dir: "data"
+  data_raw_dir: "data/raw"
+  data_interim_dir: "data/interim"
+  data_processed_dir: "data/processed"
+  output_dir: "output"
+  output_figures_dir: "output/figures"
+  output_tables_dir: "output/tables"
+  output_models_dir: "output/models"
+  logs_dir: "logs"
+  plot_dir: "plot"
+  models_dir: "models"
+
+# ===================
+# OpenAI API Configuration
+# ===================
+openai:
+  model: "gpt-5-nano"
+  temperature: 1.0
+  reasoning_effort: "medium"
+  api_key_env_var: "OPENAI_API_KEY"
+
+# ===================
+# Data Collection Settings
+# ===================
+collection:
+  profiles_file: "profiles_shuffled.csv"
+  real_profiles_file: "real_profiles.csv"
+  scored_profiles_file: "scored_profiles_shuffled.csv"
+  num_prompt_variants: 10
+  default_n_makeup: 200
+  default_n_top: 50
+
+# ===================
+# Model Training Settings
+# ===================
+training:
+  batch_size: 64
+  learning_rate: 0.001
+  epochs: 50
+  early_stopping_patience: 3
+  weight_decay: 0.00001
+  device: "auto"  # auto, cuda, cpu, mps
+
+# ===================
+# Analysis Settings
+# ===================
+analysis:
+  reduction_method: "fa_varimax"  # fa_varimax, pca, kernel_pca
+  n_components: 2
+  visualization:
+    dpi: 300
+    format: "png"
+
+# ===================
+# iPhone Attributes Definition
+# ===================
+attributes:
+  battery_life:
+    name: "battery life (in hours of video playback)"
+    values: [18, 24, 30, 36, 42]
+    jitter:
+      dist: "normal"
+      scale: 1.0
+      round: 0
+      clip: [14, 58]
+      p_no_jitter: 0.40
+  screen_size:
+    name: "screen size (in inches)"
+    values: [6.1, 6.3, 6.6, 6.9]
+    jitter:
+      enabled: false
+  thickness:
+    name: "thickness (in mm)"
+    values: [6, 7.7, 8.3, 8.8]
+    jitter:
+      dist: "normal"
+      scale: 0.2
+      round: 2
+      clip: [5.4, 9.2]
+      p_no_jitter: 0.40
+  front_camera:
+    name: "front camera resolution (in MP)"
+    values: [12, 18, 24, 30]
+    jitter:
+      dist: "normal"
+      scale: 1.0
+      round: 0
+      clip: [8, 48]
+      p_no_jitter: 0.40
+  rear_camera:
+    name: "rear camera main lens resolution (in MP)"
+    values: [36, 48, 60, 72]
+    jitter:
+      dist: "normal"
+      scale: 3.0
+      round: 0
+      clip: [24, 90]
+      p_no_jitter: 0.40
+  focal_length:
+    name: "rear camera longest focal length (in x)"
+    values: [1, 3, 5, 8, 10]
+    jitter:
+      dist: "normal"
+      scale: 0.2
+      round: 1
+      clip: [1.0, 12.0]
+      p_no_jitter: 0.40
+  ultrawide:
+    name: "ultrawide camera"
+    values: ["equipped", "not equipped"]
+    categorical: true
+    jitter:
+      enabled: false
+  geekbench:
+    name: "Geekbench multicore score"
+    values: [6200, 7000, 7800, 8600, 9400]
+    jitter:
+      dist: "normal"
+      scale: 100
+      round: 0
+      clip: [5000, 10000]
+      p_no_jitter: 0.40
+  ram:
+    name: "RAM"
+    values: [4, 8, 12, 16]
+    jitter:
+      enabled: false
+  price:
+    name: "price"
+    values: [749, 849, 949, 1049, 1149, 1249]
+    jitter:
+      dist: "uniform"
+      scale: 30
+      round: 0
+      clip: [649, 1399]
+      p_no_jitter: 0.40
+
+# ===================
+# Real iPhone Profiles (for comparison experiments)
+# ===================
+real_profiles:
+  iPhone 16:
+    battery_life: 22
+    screen_size: 6.1
+    thickness: 7.8
+    front_camera: 12
+    rear_camera: 48
+    focal_length: 2
+    ultrawide: "equipped"
+    geekbench: 8205
+    ram: 8
+    price: 899
+  iPhone 16 Plus:
+    battery_life: 27
+    screen_size: 6.7
+    thickness: 7.8
+    front_camera: 12
+    rear_camera: 48
+    focal_length: 2
+    ultrawide: "equipped"
+    geekbench: 8208
+    ram: 8
+    price: 999
+  iPhone 16 Pro:
+    battery_life: 27
+    screen_size: 6.3
+    thickness: 8.25
+    front_camera: 12
+    rear_camera: 48
+    focal_length: 5
+    ultrawide: "equipped"
+    geekbench: 8581
+    ram: 8
+    price: 1099
+  iPhone 16 Pro Max:
+    battery_life: 33
+    screen_size: 6.9
+    thickness: 8.25
+    front_camera: 12
+    rear_camera: 48
+    focal_length: 5
+    ultrawide: "equipped"
+    geekbench: 8504
+    ram: 8
+    price: 1199
