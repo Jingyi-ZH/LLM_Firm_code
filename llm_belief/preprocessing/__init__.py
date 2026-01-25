@@ -7,7 +7,14 @@ This module provides:
 """
 
 from .profiles_generate import ProfileGenerator
+from .resample import resample_profile_ids
 from .scaler import preprocess, preprocess_test
 from .dataset import PairwiseDataset
 
-__all__ = ["ProfileGenerator", "preprocess", "preprocess_test", "PairwiseDataset"]
+__all__ = [
+    "ProfileGenerator",
+    "resample_profile_ids",
+    "preprocess",
+    "preprocess_test",
+    "PairwiseDataset",
+]

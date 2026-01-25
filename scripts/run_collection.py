@@ -12,7 +12,7 @@ Usage:
     python scripts/run_collection.py --experiment fixreal --real-profile "iPhone 16 Pro"
 
     # Real vs. top-scored profiles
-    python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro" --n-top 50
+    python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro"
 
     # Real vs. makeup with injected context
     python scripts/run_collection.py --experiment context --real-profile "iPhone 16 Pro" \
@@ -54,8 +54,8 @@ Examples:
     # Real vs. makeup profiles
     python scripts/run_collection.py --experiment fixreal --real-profile "iPhone 16 Pro"
 
-    # Real vs. top-50 profiles
-    python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro" --n-top 50
+    # Real vs. top profiles
+    python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro"
 
     # Real vs. makeup with injected context
     python scripts/run_collection.py --experiment context --real-profile "iPhone 16 Pro" \
@@ -103,17 +103,6 @@ Examples:
         "--n-makeup",
         type=int,
         help="Number of makeup profiles for fixreal experiment",
-    )
-    parser.add_argument(
-        "--n-top",
-        type=int,
-        help="Number of top profiles for top experiment",
-    )
-    parser.add_argument(
-        "--shift",
-        type=int,
-        default=0,
-        help="Offset for profile selection",
     )
     parser.add_argument(
         "--context",
@@ -241,14 +230,12 @@ Examples:
         output_path = collector.collect_fixreal(
             real_profile_id=args.real_profile,
             n_makeup=args.n_makeup,
-            shift=args.shift,
             output_file=args.output,
         )
     elif args.experiment == "top":
         collector = PairwiseCollector(api_key_env_var=args.api_key_env)
         output_path = collector.collect_top(
             real_profile_id=args.real_profile,
-            n_top=args.n_top,
             output_file=args.output,
         )
     elif args.experiment == "context":
@@ -276,8 +263,6 @@ Examples:
         ]
         if args.n_makeup is not None:
             cmd += ["--n_makeup", str(args.n_makeup)]
-        if args.shift is not None:
-            cmd += ["--shift", str(args.shift)]
         subprocess.run(cmd, check=True)
         output_path = None
     elif args.experiment == "rag-faiss":
@@ -285,7 +270,6 @@ Examples:
         output_path = collector.collect_rag_fixreal(
             real_profile_id=args.real_profile,
             n_makeup=args.n_makeup,
-            shift=args.shift,
             exclude_ids_file=args.exclude_ids_file or "fixreal_used_profile_ids.npy",
             rag_faiss=args.rag_faiss,
             rag_meta=args.rag_meta,

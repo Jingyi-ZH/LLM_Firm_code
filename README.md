@@ -71,21 +71,26 @@ python scripts/run_collection.py --experiment basic --start 0 --end 1000
 
 # Real vs. makeup profile comparison
 python scripts/run_collection.py --experiment fixreal --real-profile "iPhone 16 Pro"
+# Output: output/{real_profile_id_with_underscores}_fixreal{n_makeup}.csv
 
-# Real vs. top-50 scored profiles
-python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro" --n-top 50
+# Real vs. top scored profiles
+python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro"
+# Output: output/{real_profile_id_with_underscores}_ntop{default_n_top}.csv
 
 # Real vs. makeup with injected context
 python scripts/run_collection.py --experiment context --real-profile "iPhone 16 Pro" \
   --context data/re16.txt
+# Output: output/context_{real_profile_id_with_underscores}_fixreal_{N}.csv
 
 # RAG (default: RAG_langchain pipeline)
 python scripts/run_collection.py --experiment rag --real-profile "iPhone 16 Pro" \
   --api-key-env OPENAI_API_KEY
+# Output: output/rag_langchain_{real_profile_id}_fixreal500.csv
 
 # Optional: custom FAISS-based RAG (requires index paths)
 python scripts/run_collection.py --experiment rag-faiss --real-profile "iPhone 16 Pro" \
   --rag-faiss path/to/index.faiss --rag-meta path/to/records.jsonl
+# Output: output/RAG_{real_profile_id_with_underscores}_fixreal_{n_makeup}.csv
 ```
 
 Notes:
@@ -256,17 +261,19 @@ Compares real iPhone 16/17 specifications against makeup profiles.
 ```bash
 python scripts/run_collection.py --experiment fixreal \
     --real-profile "iPhone 16 Pro" \
-    --n-makeup 200
+    --n-makeup 5000
 ```
+LLM responses are recorded in `output/{real_profile_id_with_underscores}_fixreal{n_makeup}.csv`.
+Sampled makeup profile ids are saved to `data/sample{n_makeup}_profile_ids.npy`.
 
 ### 3. Real vs. Top-Scored Comparison
 Compares real specifications against top-scored profiles.
 
 ```bash
 python scripts/run_collection.py --experiment top \
-    --real-profile "iPhone 16 Pro" \
-    --n-top 50
+    --real-profile "iPhone 16 Pro"
 ```
+LLM responses are recorded in `output/{real_profile_id_with_underscores}_ntop{default_n_top}.csv`.
 
 ### 4. Real vs. Makeup with Context Injection
 Injects external context from a text file as system context.
@@ -276,6 +283,7 @@ python scripts/run_collection.py --experiment context \
     --real-profile "iPhone 16 Pro" \
     --context data/re16.txt
 ```
+LLM responses are recorded in `output/context_{real_profile_id_with_underscores}_fixreal_{N}.csv`.
 
 Context examples:
 - `data/re16.txt`: released iPhone 16 lineup specs (generated from config)
@@ -289,6 +297,7 @@ python scripts/run_collection.py --experiment rag \
     --real-profile "iPhone 16 Pro" \
     --api-key-env OPENAI_API_KEY
 ```
+LLM responses are recorded in `output/rag_langchain_{real_profile_id}_fixreal500.csv`.
 
 Optional: custom FAISS-based RAG (requires index paths):
 
@@ -298,6 +307,7 @@ python scripts/run_collection.py --experiment rag-faiss \
     --rag-faiss path/to/index.faiss \
     --rag-meta path/to/records.jsonl
 ```
+LLM responses are recorded in `output/RAG_{real_profile_id_with_underscores}_fixreal_{n_makeup}.csv`.
 
 ## `run_collection.py` CLI
 
@@ -315,8 +325,6 @@ Conditional required:
 
 Optional:
 - `--n-makeup` (fixreal, rag, rag-faiss; default from `config/config.yaml` → `collection.default_n_makeup`)
-- `--n-top` (top only, no default)
-- `--shift` (fixreal, rag, rag-faiss; default `0`)
 - `--output` (custom output filename)
 - `--api-key-env` (single API key env var; optional)
 - `--api-key-envs` (comma-separated API key env vars for parallel `basic`; optional)

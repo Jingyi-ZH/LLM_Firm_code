@@ -32,6 +32,7 @@ from llm_belief.utils.attributes import (
     get_real_profiles,
 )
 from llm_belief.utils.logging_setup import get_experiment_logger
+from llm_belief.preprocessing import resample_profile_ids
 from .prompts import get_prompt_variant
 
 
@@ -209,22 +210,25 @@ class PairwiseCollector:
         self,
         real_profile_id: str,
         n_makeup: Optional[int] = None,
-        shift: int = 0,
         output_file: Optional[str] = None,
     ) -> Path:
         """Run real vs. makeup profile comparison experiment.
 
+        Samples makeup profiles from the first fixreal_sample_limit scored rows
+        and persists their profile_id values under data/sample{n_makeup}_profile_ids.npy.
+
         Args:
             real_profile_id: ID of the real iPhone profile (e.g., 'iPhone 16 Pro')
             n_makeup: Number of makeup profiles to compare. Defaults to config value.
-            shift: Offset for makeup profile selection
             output_file: Optional output filename
 
         Returns:
             Path to output CSV file
         """
         if n_makeup is None:
-            n_makeup = self.cfg.get('collection', 'default_n_makeup', default=200)
+            n_makeup = self.cfg.get('collection', 'default_n_makeup', default=5000)
+        sample_limit = self.cfg.get('collection', 'fixreal_sample_limit', default=20000)
+        seed = self.cfg.get('project', 'random_seed', default=2025)
 
         # Setup logging
         safe_id = real_profile_id.replace(" ", "_")
@@ -246,11 +250,28 @@ class PairwiseCollector:
         # Load scored profiles for comparison
         scored_file = self.cfg.get('collection', 'scored_profiles_file')
         scored_df = pd.read_csv(get_data_path(scored_file))
-        scored_df = rearrange_dataframe(scored_df.iloc[:, :10])
+        sample_ids_file = f"sample{n_makeup}_profile_ids.npy"
+        sample_ids = resample_profile_ids(
+            scored_df,
+            n_makeup=n_makeup,
+            sample_limit=sample_limit,
+            seed=seed,
+            output_file=sample_ids_file,
+            use_existing=True,
+        )
 
-        # Select makeup profiles (stratified sampling)
-        indices = range(shift, min(shift + n_makeup, len(scored_df)))
-        makeup_profiles = [scored_df.iloc[i].to_dict() for i in indices]
+        scoped_df = scored_df.iloc[: min(sample_limit, len(scored_df))]
+        try:
+            makeup_df = scoped_df.set_index("profile_id").loc[sample_ids].reset_index()
+        except KeyError as exc:
+            raise ValueError(
+                "Sampled profile ids not found in scored profiles."
+            ) from exc
+
+        base_cols = list(scored_df.columns[:10]) + ["profile_id"]
+        base_cols = [c for c in base_cols if c in makeup_df.columns]
+        makeup_df = rearrange_dataframe(makeup_df[base_cols])
+        makeup_profiles = makeup_df.to_dict(orient="records")
 
         # Setup output
         if output_file is None:
@@ -271,6 +292,7 @@ class PairwiseCollector:
                 writer.writeheader()
 
             for pair_id, makeup_profile in enumerate(makeup_profiles):
+                makeup_profile_id = makeup_profile.get("profile_id")
                 makeup_prompt = {
                     k: v for k, v in makeup_profile.items() if k != "profile_id"
                 }
@@ -307,7 +329,7 @@ class PairwiseCollector:
                     "prompt": prompt,
                     "prompt_response": res,
                     "chosen_profile": chosen_profile,
-                    "profile_id": real_profile_id if is_real_chosen else f"makeup_{pair_id}",
+                    "profile_id": real_profile_id if is_real_chosen else makeup_profile_id,
                 })
 
         end_time = datetime.now()
@@ -320,7 +342,6 @@ class PairwiseCollector:
     def collect_top(
         self,
         real_profile_id: str,
-        n_top: Optional[int] = None,
         score_column: str = "MLP_score",
         output_file: Optional[str] = None,
     ) -> Path:
@@ -328,15 +349,13 @@ class PairwiseCollector:
 
         Args:
             real_profile_id: ID of the real iPhone profile
-            n_top: Number of top profiles to compare. Defaults to config value.
             score_column: Column name for sorting profiles
             output_file: Optional output filename
 
         Returns:
             Path to output CSV file
         """
-        if n_top is None:
-            n_top = self.cfg.get('collection', 'default_n_top', default=50)
+        n_top = self.cfg.get('collection', 'default_n_top', default=50)
 
         # Setup logging
         safe_id = real_profile_id.replace(" ", "_")
@@ -582,7 +601,7 @@ class PairwiseCollector:
             ) from exc
 
         if n_makeup is None:
-            n_makeup = self.cfg.get("collection", "default_n_makeup", default=200)
+            n_makeup = self.cfg.get("collection", "default_n_makeup", default=5000)
 
         safe_id = real_profile_id.replace(" ", "_")
         logger = get_experiment_logger("rag_fixreal", safe_id)

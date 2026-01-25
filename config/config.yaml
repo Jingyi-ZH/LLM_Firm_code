@@ -38,7 +38,8 @@ collection:
   real_profiles_file: "real_profiles.csv"
   scored_profiles_file: "scored_profiles_shuffled.csv"
   num_prompt_variants: 10
-  default_n_makeup: 200
+  default_n_makeup: 5000
+  fixreal_sample_limit: 20000
   default_n_top: 50
 
 # ===================
