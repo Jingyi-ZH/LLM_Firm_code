@@ -8,14 +8,14 @@ This project implements a complete pipeline for:
 1. **Generate Hypothetical Profiles**: Creating iPhone specification profiles for comparison
 2. **Data Collection**: Eliciting beliefs from LLMs through pairwise comparisons
 3. **Model Training**: Training scoring models (Logistic Regression, MLP, XGBoost, Adaptive Lasso)
-4. **Interpretability Analysis**: Integrated Gradients, Partial Dependence Plots
-5. **Data Collection with External Knowledge**: RAG-enhanced belief elicitation
+4. **Interpretability Analysis**: Integrated Gradients, Partial Dependence Plots, Probability Field Visualization
+5. **Data Collection with External Knowledge**: RAG-enhanced/Context-injection belief elicitation
 
 Detailed pipeline (current workflow):
-1. Generate hypothetical profiles
+1. Generate hypothetical profiles and save in `data/profiles_shuffled.csv`
 2. Collect pairwise comparisons from 20,000 hypothetical profiles
 3. Run fixreal comparisons (5,000 hypothetical profiles vs real profiles) to rank real profiles
-4. Train scoring models on step 2 outputs and write `scored_profiles_shuffled.csv`
+4. Train scoring models on step 2 outputs and write `data/scored_profiles_shuffled.csv`
 5. Visualize results (2D/3D probability fields, PDPs) and generate summary tables
 6. Collect external-knowledge data (RAG/context injection) using fixreal mode
 
@@ -170,8 +170,6 @@ LLM_Firm_code/
 ├── pyproject.toml          # Modern Python packaging
 └── README.md               # This file
 ```
-
-Other top-level artifacts such as `hooks/`, `info/`, `HEAD`, or `config.git.bak` are legacy files and can be removed if not needed.
 
 ## Configuration
 
