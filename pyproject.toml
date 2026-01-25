@@ -67,9 +67,6 @@ Homepage = "https://github.com/your-org/llm-belief-elicitation"
 Documentation = "https://github.com/your-org/llm-belief-elicitation#readme"
 Repository = "https://github.com/your-org/llm-belief-elicitation"
 
-[tool.setuptools]
-packages = ["llm_belief", "config", "scripts"]
-
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["llm_belief*", "config*", "scripts*"]
