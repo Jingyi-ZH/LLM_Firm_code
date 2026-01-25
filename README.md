@@ -67,6 +67,7 @@ This creates `data/profiles_shuffled.csv` from `config/config.yaml`.
 ```bash
 # Basic pairwise comparison (10,000 pairs)
 python scripts/run_collection.py --experiment basic --start 0 --end 1000
+# Output: output/{start}_{end}.csv (e.g., output/0_1000.csv)
 
 # Real vs. makeup profile comparison
 python scripts/run_collection.py --experiment fixreal --real-profile "iPhone 16 Pro"
@@ -161,7 +162,9 @@ LLM_Firm_code/
 ├── data/                   # Data files
 │   ├── profiles_shuffled.csv
 │   ├── real_profiles.csv
-│   └── scored_profiles_shuffled.csv
+│   ├── scored_profiles_shuffled.csv
+│   ├── re16.txt            # Level 1 knowledge injected into prompts
+│   └── re16ru17.txt         # Level 2 knowledge injected into prompts
 ├── output/                 # LLM response outputs
 ├── plot/                   # Generated visualizations
 ├── logs/                   # Execution logs
@@ -235,6 +238,7 @@ Compares 10,000 pairs of hypothetical iPhone profiles to learn LLM preferences.
 ```bash
 python scripts/run_collection.py --experiment basic --start 0 --end 10000
 ```
+LLM responses are recorded in `output/{start}_{end}.csv` (e.g., `output/0_10000.csv`).
 
 ### Parallel Basic Collection (Multiple API Keys)
 Provide a comma-separated list of API key env vars to parallelize the range:
