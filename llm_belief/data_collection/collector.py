@@ -625,7 +625,6 @@ class PairwiseCollector:
         self,
         real_profile_id: str,
         n_makeup: Optional[int] = None,
-        shift: int = 0,
         exclude_ids_file: Optional[str] = "fixreal_used_profile_ids.npy",
         rag_faiss: Optional[str] = None,
         rag_meta: Optional[str] = None,
@@ -645,6 +644,8 @@ class PairwiseCollector:
 
         if n_makeup is None:
             n_makeup = self.cfg.get("collection", "default_n_makeup", default=5000)
+        sample_limit = self.cfg.get("collection", "fixreal_sample_limit", default=20000)
+        seed = self.cfg.get("project", "random_seed", default=2025)
 
         safe_id = real_profile_id.replace(" ", "_")
         logger = get_experiment_logger("rag_fixreal", safe_id)
@@ -662,18 +663,40 @@ class PairwiseCollector:
             raise ValueError(f"Real profile '{real_profile_id}' not found")
         real_profile = format_profile_for_prompt(real_profiles[real_profile_id])
 
-        # Load scored profiles and filter
-        scored_file = self.cfg.get("collection", "scored_profiles_file")
-        scored_df = pd.read_csv(get_data_path(scored_file))
+        # Load generated profiles and reuse fixed sample ids
+        profiles_file = self.cfg.get("collection", "profiles_file")
+        profiles_df = pd.read_csv(get_data_path(profiles_file))
+
+        sample_ids = resample_profile_ids(
+            profiles_df,
+            n_makeup=n_makeup,
+            sample_limit=sample_limit,
+            seed=seed,
+            output_file=f"sample{n_makeup}_profile_ids.npy",
+            use_existing=True,
+        )
         if exclude_ids_file:
             exclude_ids = np.load(get_data_path(exclude_ids_file), allow_pickle=True)
-            scored_df = scored_df[~scored_df["profile_id"].isin(exclude_ids)]
+            sample_ids = np.array(
+                [pid for pid in sample_ids if pid not in set(exclude_ids)]
+            )
+            if len(sample_ids) == 0:
+                raise ValueError(
+                    "All sampled profile ids were excluded; regenerate sample ids or "
+                    "adjust exclude_ids_file."
+                )
 
-        scored_display = rearrange_dataframe(scored_df.iloc[:, :10])
-        scored_display["profile_id"] = scored_df["profile_id"].values
+        scoped_df = profiles_df.iloc[: min(sample_limit, len(profiles_df))]
+        try:
+            makeup_df = scoped_df.set_index("profile_id").loc[sample_ids].reset_index()
+        except KeyError as exc:
+            raise ValueError(
+                "Sampled profile ids not found in profiles."
+            ) from exc
 
-        indices = range(shift, min(shift + n_makeup, len(scored_display)))
-        makeup_profiles = [scored_display.iloc[i].to_dict() for i in indices]
+        base_cols = list(profiles_df.columns)
+        makeup_df = rearrange_dataframe(makeup_df[base_cols])
+        makeup_profiles = makeup_df.to_dict(orient="records")
 
         # RAG helpers
         def _embed_texts(texts: List[str], batch: int = 64) -> List[np.ndarray]:
@@ -795,6 +818,7 @@ class PairwiseCollector:
 
                 chosen_profile = profiles.get(res)
                 is_real_chosen = (res == labels[0])
+                makeup_profile_id = makeup_profile.get("profile_id")
 
                 writer.writerow(
                     {
@@ -806,7 +830,7 @@ class PairwiseCollector:
                         "prompt": final_prompt,
                         "prompt_response": res,
                         "chosen_profile": chosen_profile,
-                        "profile_id": real_profile_id if is_real_chosen else f"makeup_{pair_id}",
+                        "profile_id": real_profile_id if is_real_chosen else makeup_profile_id,
                         "retrieval_context": f"{{'k': {rag_k}, 'per_chars': {rag_per_chars}}}",
                         "retrieval_hits": sources,
                     }

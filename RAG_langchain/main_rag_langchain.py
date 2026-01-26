@@ -1,16 +1,26 @@
 import os
 import ast
 import pandas as pd
+import sys
+from pathlib import Path
 from langchain.chat_models import init_chat_model
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.vectorstores import InMemoryVectorStore
 import random
-random.seed(2025)
 os.chdir(
     os.path.dirname(os.path.abspath(__file__))
 )
 import numpy as np
 import argparse
+
+_current_file = Path(__file__).resolve()
+_project_root = _current_file.parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
+from config import get_config
+from llm_belief.preprocessing import resample_profile_ids
+from llm_belief.utils.paths import get_data_path
 def read_arguments():
     parser = argparse.ArgumentParser(
         description="Run task with start, end, and account parameters"
@@ -45,6 +55,12 @@ real_profile_id, account = (
     args.real_profile_id,
     args.account,
 )
+
+cfg = get_config()
+n_makeup = args.n_makeup or cfg.get("collection", "default_n_makeup", default=5000)
+sample_limit = cfg.get("collection", "fixreal_sample_limit", default=20000)
+seed = cfg.get("project", "random_seed", default=2025)
+random.seed(seed)
 
 llm = init_chat_model(
     "gpt-5-nano",
@@ -430,13 +446,21 @@ print(f"Answer: {result['answer']}")
 import ast
 import csv
 
-resample_500index = np.load("../data/rag_langchain_profile_ids500.npy", allow_pickle=True)
-df = pd.read_csv(f"../output/{real_profile_id}_fixreal5000.csv")
+profiles_df = pd.read_csv(get_data_path(cfg.get("collection", "profiles_file")))
+sample_ids = resample_profile_ids(
+    profiles_df,
+    n_makeup=n_makeup,
+    sample_limit=sample_limit,
+    seed=seed,
+    output_file=f"sample{n_makeup}_profile_ids.npy",
+    use_existing=True,
+)
 
-df_sample = df[df['profile_id'].isin(resample_500index)].reset_index(drop=True)
-assert len(df_sample) == 500
+df = pd.read_csv(f"../output/{real_profile_id}_fixreal{n_makeup}.csv")
+df_sample = df[df["profile_id"].isin(sample_ids)].reset_index(drop=True)
+assert len(df_sample) == len(sample_ids)
 
-csv_path = f"../output/rag_langchain_{real_profile_id}_fixreal500.csv"
+csv_path = f"../output/rag_langchain_{real_profile_id}_fixreal{n_makeup}.csv"
 
 with open(csv_path, mode="w", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)

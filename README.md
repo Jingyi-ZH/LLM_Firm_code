@@ -87,7 +87,8 @@ python scripts/run_collection.py --experiment context --real-profile "iPhone 16 
 # RAG (default: RAG_langchain pipeline)
 python scripts/run_collection.py --experiment rag --real-profile "iPhone 16 Pro" \
   --api-key-env OPENAI_API_KEY
-# Output: output/rag_langchain_{real_profile_id}_fixreal500.csv
+# Output: output/rag_langchain_{real_profile_id}_fixreal{n_makeup}.csv
+# Requires `output/{real_profile_id_with_underscores}_fixreal{n_makeup}.csv` from fixreal.
 
 # Optional: custom FAISS-based RAG (requires index paths)
 python scripts/run_collection.py --experiment rag-faiss --real-profile "iPhone 16 Pro" \
@@ -307,7 +308,10 @@ python scripts/run_collection.py --experiment rag \
     --real-profile "iPhone 16 Pro" \
     --api-key-env OPENAI_API_KEY
 ```
-LLM responses are recorded in `output/rag_langchain_{real_profile_id}_fixreal500.csv`.
+LLM responses are recorded in `output/rag_langchain_{real_profile_id}_fixreal{n_makeup}.csv`.
+Requires `output/{real_profile_id_with_underscores}_fixreal{n_makeup}.csv` from fixreal.
+Sampling matches fixreal: random sample from `data/profiles_shuffled.csv`,
+saved to `data/sample{n_makeup}_profile_ids.npy` (seed 2025).
 
 Optional: custom FAISS-based RAG (requires index paths):
 
@@ -318,6 +322,8 @@ python scripts/run_collection.py --experiment rag-faiss \
     --rag-meta path/to/records.jsonl
 ```
 LLM responses are recorded in `output/RAG_{real_profile_id_with_underscores}_fixreal_{n_makeup}.csv`.
+Sampling matches fixreal: random sample from `data/profiles_shuffled.csv`,
+saved to `data/sample{n_makeup}_profile_ids.npy` (seed 2025).
 
 ## `run_collection.py` CLI
 
