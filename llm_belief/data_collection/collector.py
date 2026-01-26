@@ -487,7 +487,7 @@ class PairwiseCollector:
             real_profile_id: ID of the real iPhone profile
             context_file: Path to context text file (relative to data/ or absolute)
             sample_ids_file: Numpy file with sampled profile ids
-            scored_limit: Max rows from scored profiles to consider
+            scored_limit: Max rows from profiles to consider
             output_file: Optional output filename
             context_date: Date to include in system context
             reasoning_effort: Optional reasoning effort override
@@ -497,16 +497,34 @@ class PairwiseCollector:
         logger.info(f"Using model: {self.model} with temperature: {self.temperature}")
         logger.info(f"Real profile: {real_profile_id}")
 
-        sample_ids_path = get_data_path(sample_ids_file)
-        sampled_ids = np.load(sample_ids_path, allow_pickle=True)
+        profiles_file = self.cfg.get("collection", "profiles_file")
+        profiles_df = pd.read_csv(get_data_path(profiles_file))
 
-        scored_file = self.cfg.get("collection", "scored_profiles_file")
-        scored_df = pd.read_csv(get_data_path(scored_file)).iloc[:scored_limit]
-        sampled = scored_df[scored_df["profile_id"].isin(sampled_ids)]
-        if sampled.empty:
-            raise ValueError("No sampled profiles found for reali16 fixreal run.")
+        sample_limit = self.cfg.get("collection", "fixreal_sample_limit", default=20000)
+        if scored_limit is not None:
+            sample_limit = scored_limit
+        n_makeup = self.cfg.get("collection", "default_n_makeup", default=5000)
+        seed = self.cfg.get("project", "random_seed", default=2025)
 
-        df = rearrange_dataframe(sampled).reset_index(drop=True)
+        sample_ids = resample_profile_ids(
+            profiles_df,
+            n_makeup=n_makeup,
+            sample_limit=sample_limit,
+            seed=seed,
+            output_file=sample_ids_file,
+            use_existing=True,
+        )
+
+        scoped_df = profiles_df.iloc[: min(sample_limit, len(profiles_df))]
+        try:
+            sampled = scoped_df.set_index("profile_id").loc[sample_ids].reset_index()
+        except KeyError as exc:
+            raise ValueError(
+                "Sampled profile ids not found in profiles."
+            ) from exc
+
+        base_cols = list(profiles_df.columns)
+        df = rearrange_dataframe(sampled[base_cols]).reset_index(drop=True)
 
         real_profiles = get_real_profiles()
         if real_profile_id not in real_profiles:

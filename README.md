@@ -81,6 +81,8 @@ python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro"
 python scripts/run_collection.py --experiment context --real-profile "iPhone 16 Pro" \
   --context data/re16.txt
 # Output: output/context_{real_profile_id_with_underscores}_fixreal_{N}.csv
+# Sampling: uses the same random sample as fixreal from `data/profiles_shuffled.csv`
+# and saves/reads `data/sample{n_makeup}_profile_ids.npy`.
 
 # RAG (default: RAG_langchain pipeline)
 python scripts/run_collection.py --experiment rag --real-profile "iPhone 16 Pro" \
@@ -290,6 +292,8 @@ python scripts/run_collection.py --experiment context \
     --context data/re16.txt
 ```
 LLM responses are recorded in `output/context_{real_profile_id_with_underscores}_fixreal_{N}.csv`.
+Sampling matches fixreal: random sample from `data/profiles_shuffled.csv`,
+saved to `data/sample{n_makeup}_profile_ids.npy` (seed 2025).
 
 Context examples:
 - `data/re16.txt`: released iPhone 16 lineup specs (generated from config)
