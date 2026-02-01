@@ -7,6 +7,7 @@ from langchain.chat_models import init_chat_model
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.vectorstores import InMemoryVectorStore
 import random
+from openai import OpenAI
 os.chdir(
     os.path.dirname(os.path.abspath(__file__))
 )
@@ -55,6 +56,12 @@ def read_arguments():
         default=None,
         help="Override sampling temperature",
     )
+    parser.add_argument(
+        "--logprobs",
+        choices=["on", "off"],
+        default=None,
+        help="Enable or disable logprobs",
+    )
 
     args = parser.parse_args()
     if args.start is not None and args.end is None:
@@ -85,6 +92,18 @@ reasoning_effort = (
     if args.reasoning_effort is not None
     else cfg.get("openai", "reasoning_effort", default="medium")
 )
+logprobs_cfg = cfg.get("openai", "logprobs", default={})
+default_logprobs_enabled = bool(logprobs_cfg.get("enabled", False))
+if args.logprobs is None:
+    logprobs_enabled = default_logprobs_enabled
+else:
+    logprobs_enabled = (args.logprobs == "on")
+logprobs_model = logprobs_cfg.get("model", model_name)
+logprobs_temperature = logprobs_cfg.get("temperature", 0.0)
+logprobs_max_output_tokens = logprobs_cfg.get("max_output_tokens", 16)
+logprobs_top_logprobs = logprobs_cfg.get("top_logprobs", 2)
+logprobs_include = logprobs_cfg.get("include", ["message.output_text.logprobs"])
+openai_client = OpenAI(api_key=os.environ.get(account))
 
 llm = init_chat_model(
     model_name,
@@ -439,6 +458,62 @@ class State(TypedDict):
     question: str
     context: List[Document]
     answer: str
+    prob_chosen: float
+    prob_nochosen: float
+
+
+def _get_field(obj, key, default=None):
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
+def extract_logprobs(response, chosen_text):
+    output = _get_field(response, "output", []) or []
+    if not output:
+        return None, None
+    content = _get_field(output[0], "content", []) or []
+    if not content:
+        return None, None
+    logprobs = _get_field(content[0], "logprobs", None)
+    if not logprobs:
+        return None, None
+
+    token_info = logprobs[0]
+    token = _get_field(token_info, "token", "")
+    logprob = _get_field(token_info, "logprob", None)
+    top_logprobs = _get_field(token_info, "top_logprobs", []) or []
+
+    chosen_norm = (chosen_text or "").strip()
+    token_norm = (token or "").strip()
+    prob_chosen = None
+    prob_nochosen = None
+
+    if logprob is not None and token_norm == chosen_norm:
+        prob_chosen = float(np.exp(logprob))
+
+    if top_logprobs:
+        for item in top_logprobs:
+            t = _get_field(item, "token", "")
+            lp = _get_field(item, "logprob", None)
+            if lp is None:
+                continue
+            if (t or "").strip() == chosen_norm:
+                prob_chosen = float(np.exp(lp))
+            elif prob_nochosen is None:
+                prob_nochosen = float(np.exp(lp))
+
+    if prob_nochosen is None and top_logprobs:
+        for item in top_logprobs:
+            t = _get_field(item, "token", "")
+            lp = _get_field(item, "logprob", None)
+            if lp is None:
+                continue
+            if (t or "").strip() != chosen_norm:
+                prob_nochosen = float(np.exp(lp))
+                break
+
+    return prob_chosen, prob_nochosen
 
 def retrieve(state: State):
     retrieved_docs = vector_store.similarity_search(state["question"])
@@ -447,8 +522,33 @@ def retrieve(state: State):
 
 def generate(state: State):
     docs_content = "\n\n".join(doc.page_content for doc in state["context"])
-    messages = prompt.invoke({"question": state["question"], "context": docs_content})
-    response = llm.invoke(messages)
+    prompt_value = prompt.invoke({"question": state["question"], "context": docs_content})
+    if logprobs_enabled:
+        messages = prompt_value.to_messages()
+        openai_messages = []
+        for m in messages:
+            role = getattr(m, "type", "user")
+            if role == "human":
+                role = "user"
+            elif role == "ai":
+                role = "assistant"
+            openai_messages.append({"role": role, "content": m.content})
+        response = openai_client.responses.create(
+            model=logprobs_model,
+            input=openai_messages,
+            temperature=logprobs_temperature,
+            max_output_tokens=logprobs_max_output_tokens,
+            top_logprobs=logprobs_top_logprobs,
+            include=logprobs_include,
+        )
+        output_text = response.output_text
+        prob_chosen, prob_nochosen = extract_logprobs(response, output_text)
+        return {
+            "answer": output_text,
+            "prob_chosen": prob_chosen,
+            "prob_nochosen": prob_nochosen,
+        }
+    response = llm.invoke(prompt_value)
     return {"answer": response.content}
 
 from langgraph.graph import START, StateGraph
@@ -488,7 +588,10 @@ csv_path = f"../output/rag_langchain_{real_profile_id}_fixreal{n_makeup}.csv"
 
 with open(csv_path, mode="w", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)
-    writer.writerow(df_sample.columns.tolist() + ['rag_prompt_response', 'rag_chosen_id'])
+    extra_cols = ['rag_prompt_response', 'rag_chosen_id']
+    if logprobs_enabled:
+        extra_cols += ['prob_chosen', 'prob_nochosen']
+    writer.writerow(df_sample.columns.tolist() + extra_cols)
 
 for i in df_sample.index:
     lst = ast.literal_eval(df_sample.loc[i, 'prompt'])
@@ -497,6 +600,8 @@ for i in df_sample.index:
     
     result = graph.invoke({"question": rag_prompt})
     rag_prompt_response = result['answer']
+    prob_chosen = result.get('prob_chosen')
+    prob_nochosen = result.get('prob_nochosen')
 
     labels = [real_profile_id, str(df_sample.loc[i, 'profile_id'])]
     if result['answer'] == df_sample.loc[i, 'prompt_response']:
@@ -506,4 +611,7 @@ for i in df_sample.index:
 
     with open(csv_path, mode="a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(df_sample.loc[i].tolist() + [rag_prompt_response, rag_chosen_id])
+        row = df_sample.loc[i].tolist() + [rag_prompt_response, rag_chosen_id]
+        if logprobs_enabled:
+            row += [prob_chosen, prob_nochosen]
+        writer.writerow(row)

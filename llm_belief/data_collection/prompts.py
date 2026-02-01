@@ -23,17 +23,17 @@ SYSTEM_TEXTS: Dict[str, str] = {
     "prompt_0": (
         "You will be provided with two smartphone alternatives described by a set of "
         "attributes. Decide which one is more likely to appear in the next iPhone "
-        "generation lineup (covering standard, Pro, Max, Plus, or Air) in 6 months."
+        "generation lineup (covering standard, Pro, Max, Plus, or Air) within 6 months."
     ),
     "prompt_1": (
         "You will be shown two smartphone profiles with specific attributes. "
         "Identify which is more plausible for Apple's next iPhone lineup "
-        "(standard, Pro, Max, Plus, Air) in 6 months."
+        "(standard, Pro, Max, Plus, Air) within 6 months."
     ),
     "prompt_2": (
         "Two smartphone alternatives will be presented as stimuli. "
         "Select the alternative that more closely aligns with the next-generation "
-        "iPhone models (standard, Pro, Max, Plus, Air) scheduled in 6 months."
+        "iPhone models (standard, Pro, Max, Plus, Air) scheduled within 6 months."
     ),
     "prompt_3": (
         "You will receive two smartphone descriptions. "
@@ -48,12 +48,12 @@ SYSTEM_TEXTS: Dict[str, str] = {
     "prompt_5": (
         "Participants are asked to evaluate two smartphone prototypes. "
         "Identify the prototype most consistent with the characteristics of "
-        "the next iPhone lineup (6 months)."
+        "the next iPhone lineup (within 6 months)."
     ),
     "prompt_6": (
         "Two smartphone alternatives defined by multiple attributes will be shown. "
         "Decide which alternative is more realistic to be included in Apple's "
-        "next iPhone lineup in 6 months."
+        "next iPhone lineup within 6 months."
     ),
     "prompt_7": (
         "Two smartphone configurations are introduced as experimental stimuli. "
@@ -63,12 +63,12 @@ SYSTEM_TEXTS: Dict[str, str] = {
     "prompt_8": (
         "This task presents two smartphone concepts. "
         "Select the concept more likely to be adopted in Apple's next iPhone "
-        "generation in 6 months."
+        "generation within 6 months."
     ),
     "prompt_9": (
         "Two smartphone attribute sets will be evaluated. "
         "Decide which set is more likely to be represented in the upcoming "
-        "iPhone generation (6 months)."
+        "iPhone generation (within 6 months)."
     ),
 }
 
@@ -90,6 +90,7 @@ def get_prompt_variant(
     variant_key,
     pair: Sequence[str],
     labels: Sequence[str],
+    date_override: str | None = None,
 ) -> List[Dict[str, str]]:
     """Generate a prompt variant for pairwise comparison.
 
@@ -103,7 +104,11 @@ def get_prompt_variant(
         suitable for OpenAI chat API.
     """
     key = _normalize_key(variant_key)
-    system_text = SYSTEM_TEXTS.get(key, SYSTEM_TEXTS["prompt_0"])
+    date_text = date_override or "2024-06-01"
+    system_text = (
+        f"Assume the current date is {date_text}. "
+        + SYSTEM_TEXTS.get(key, SYSTEM_TEXTS["prompt_0"])
+    )
 
     user_text = (
         USER_TEMPLATE.replace("{l0}", str(labels[0]))

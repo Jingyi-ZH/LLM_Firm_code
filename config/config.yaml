@@ -29,6 +29,14 @@ openai:
   temperature: 1.0
   reasoning_effort: "medium"
   api_key_env_var: "OPENAI_API_KEY"
+  logprobs:
+    enabled: false
+    model: "gpt-4.1-nano"
+    temperature: 0.0
+    max_output_tokens: 16
+    top_logprobs: 2
+    include:
+      - "message.output_text.logprobs"
 
 # ===================
 # Data Collection Settings

@@ -180,6 +180,12 @@ Examples:
         help="Override reasoning effort (optional)",
     )
     parser.add_argument(
+        "--logprobs",
+        choices=["on", "off"],
+        default=None,
+        help="Enable or disable logprobs (collector experiments only)",
+    )
+    parser.add_argument(
         "--model",
         type=str,
         help="Override model name (rag only)",
@@ -225,7 +231,10 @@ Examples:
                         stem, *rest = output_file.rsplit(".", 1)
                         suffix = f"_part{i+1}"
                         output_file = f"{stem}{suffix}.{rest[0]}" if rest else f"{stem}{suffix}"
-                    collector = PairwiseCollector(api_key_env_var=env_var)
+                    collector = PairwiseCollector(
+                        api_key_env_var=env_var,
+                        logprobs=args.logprobs,
+                    )
                     futures.append(
                         executor.submit(
                             collector.collect_basic,
@@ -240,7 +249,10 @@ Examples:
                     print(f"\nOutput saved to: {output_path}")
             return
 
-        collector = PairwiseCollector(api_key_env_var=args.api_key_env)
+        collector = PairwiseCollector(
+            api_key_env_var=args.api_key_env,
+            logprobs=args.logprobs,
+        )
         output_path = collector.collect_basic(
             start_idx=args.start,
             end_idx=args.end,
@@ -248,7 +260,10 @@ Examples:
             output_file=args.output,
         )
     elif args.experiment == "fixreal":
-        collector = PairwiseCollector(api_key_env_var=args.api_key_env)
+        collector = PairwiseCollector(
+            api_key_env_var=args.api_key_env,
+            logprobs=args.logprobs,
+        )
         output_path = collector.collect_fixreal(
             real_profile_id=args.real_profile,
             n_makeup=args.n_makeup,
@@ -256,7 +271,10 @@ Examples:
             output_file=args.output,
         )
     elif args.experiment == "top":
-        collector = PairwiseCollector(api_key_env_var=args.api_key_env)
+        collector = PairwiseCollector(
+            api_key_env_var=args.api_key_env,
+            logprobs=args.logprobs,
+        )
         output_path = collector.collect_top(
             real_profile_id=args.real_profile,
             n_top=args.n_top,
@@ -264,7 +282,10 @@ Examples:
             output_file=args.output,
         )
     elif args.experiment == "context":
-        collector = PairwiseCollector(api_key_env_var=args.api_key_env)
+        collector = PairwiseCollector(
+            api_key_env_var=args.api_key_env,
+            logprobs=args.logprobs,
+        )
         output_path = collector.collect_context_fixreal(
             real_profile_id=args.real_profile,
             context_file=args.context,
@@ -289,6 +310,8 @@ Examples:
         ]
         if args.reasoning_effort:
             cmd += ["--reasoning-effort", args.reasoning_effort]
+        if args.logprobs is not None:
+            cmd += ["--logprobs", args.logprobs]
         if args.model:
             cmd += ["--model", args.model]
         if args.temperature is not None:
@@ -298,7 +321,10 @@ Examples:
         subprocess.run(cmd, check=True)
         output_path = None
     elif args.experiment == "rag-faiss":
-        collector = PairwiseCollector(api_key_env_var=args.api_key_env)
+        collector = PairwiseCollector(
+            api_key_env_var=args.api_key_env,
+            logprobs=args.logprobs,
+        )
         output_path = collector.collect_rag_fixreal(
             real_profile_id=args.real_profile,
             n_makeup=args.n_makeup,

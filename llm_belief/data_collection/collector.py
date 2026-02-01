@@ -57,6 +57,7 @@ class PairwiseCollector:
         self,
         api_key_env_var: Optional[str] = None,
         api_key: Optional[str] = None,
+        logprobs: Optional[str] = None,
     ):
         """Initialize the collector.
 
@@ -68,6 +69,20 @@ class PairwiseCollector:
         self.model = self.cfg.get('openai', 'model')
         self.temperature = self.cfg.get('openai', 'temperature')
         self.reasoning_effort = self.cfg.get('openai', 'reasoning_effort', default='medium')
+        logprobs_cfg = self.cfg.get("openai", "logprobs", default={})
+        default_logprobs_enabled = bool(logprobs_cfg.get("enabled", False))
+        if logprobs is None:
+            self.logprobs_enabled = default_logprobs_enabled
+        else:
+            self.logprobs_enabled = (logprobs == "on")
+        self.logprobs_model = logprobs_cfg.get("model", self.model)
+        self.logprobs_temperature = logprobs_cfg.get("temperature", 0.0)
+        self.logprobs_max_output_tokens = logprobs_cfg.get("max_output_tokens", 16)
+        self.logprobs_top_logprobs = logprobs_cfg.get("top_logprobs", 2)
+        self.logprobs_include = logprobs_cfg.get(
+            "include",
+            ["message.output_text.logprobs"],
+        )
 
         # Get API key
         if api_key is None:
@@ -79,7 +94,7 @@ class PairwiseCollector:
 
     def _get_output_columns(self) -> List[str]:
         """Get standard output CSV columns."""
-        return [
+        cols = [
             "model",
             "temperature",
             "pair_id",
@@ -90,12 +105,72 @@ class PairwiseCollector:
             "chosen_profile",
             "profile_id",
         ]
+        if self.logprobs_enabled:
+            cols += ["prob_chosen", "prob_nochosen"]
+        return cols
+
+    @staticmethod
+    def _get_field(obj: Any, key: str, default: Any = None) -> Any:
+        if isinstance(obj, dict):
+            return obj.get(key, default)
+        return getattr(obj, key, default)
+
+    def _extract_logprobs(
+        self,
+        response: Any,
+        chosen_text: str,
+    ) -> tuple[Optional[float], Optional[float]]:
+        output = self._get_field(response, "output", []) or []
+        if not output:
+            return None, None
+        content = self._get_field(output[0], "content", []) or []
+        if not content:
+            return None, None
+        logprobs = self._get_field(content[0], "logprobs", None)
+        if not logprobs:
+            return None, None
+
+        token_info = logprobs[0]
+        token = self._get_field(token_info, "token", "")
+        logprob = self._get_field(token_info, "logprob", None)
+        top_logprobs = self._get_field(token_info, "top_logprobs", []) or []
+
+        chosen_norm = (chosen_text or "").strip()
+        token_norm = (token or "").strip()
+        prob_chosen = None
+        prob_nochosen = None
+
+        if logprob is not None and token_norm == chosen_norm:
+            prob_chosen = float(np.exp(logprob))
+
+        if top_logprobs:
+            for item in top_logprobs:
+                t = self._get_field(item, "token", "")
+                lp = self._get_field(item, "logprob", None)
+                if lp is None:
+                    continue
+                if (t or "").strip() == chosen_norm:
+                    prob_chosen = float(np.exp(lp))
+                elif prob_nochosen is None:
+                    prob_nochosen = float(np.exp(lp))
+
+        if prob_nochosen is None and top_logprobs:
+            for item in top_logprobs:
+                t = self._get_field(item, "token", "")
+                lp = self._get_field(item, "logprob", None)
+                if lp is None:
+                    continue
+                if (t or "").strip() != chosen_norm:
+                    prob_nochosen = float(np.exp(lp))
+                    break
+
+        return prob_chosen, prob_nochosen
 
     def _call_api(
         self,
         prompt: List[Dict[str, str]],
         reasoning_effort: Optional[str] = None,
-    ) -> str:
+    ) -> tuple[str, Optional[float], Optional[float]]:
         """Call OpenAI API with the given prompt.
 
         Args:
@@ -105,13 +180,26 @@ class PairwiseCollector:
             Model response text
         """
         effort = reasoning_effort or self.reasoning_effort
+        if self.logprobs_enabled:
+            response = self.client.responses.create(
+                model=self.logprobs_model,
+                input=prompt,
+                temperature=self.logprobs_temperature,
+                max_output_tokens=self.logprobs_max_output_tokens,
+                top_logprobs=self.logprobs_top_logprobs,
+                include=self.logprobs_include,
+            )
+            text = response.output_text
+            prob_chosen, prob_nochosen = self._extract_logprobs(response, text)
+            return text, prob_chosen, prob_nochosen
+
         response = self.client.responses.create(
             model=self.model,
             input=prompt,
             temperature=self.temperature,
             reasoning={"effort": effort},
         )
-        return response.output_text
+        return response.output_text, None, None
 
     def _get_prompt_pair(
         self,
@@ -193,7 +281,10 @@ class PairwiseCollector:
                     prompt_labels,
                 )
 
-                res = self._call_api(prompt, reasoning_effort=reasoning_effort)
+                res, prob_chosen, prob_nochosen = self._call_api(
+                    prompt,
+                    reasoning_effort=reasoning_effort,
+                )
 
                 call_time = datetime.now()
                 logger.info(
@@ -204,9 +295,9 @@ class PairwiseCollector:
                 chosen_profile = profiles.get(res)
                 profile_id = labels.index(res) + 2 * pair_id if chosen_profile else None
 
-                writer.writerow({
-                    "model": self.model,
-                    "temperature": self.temperature,
+                row = {
+                    "model": self.logprobs_model if self.logprobs_enabled else self.model,
+                    "temperature": self.logprobs_temperature if self.logprobs_enabled else self.temperature,
                     "pair_id": pair_id,
                     "pair": profiles,
                     "prompt_variant": prompt_variant,
@@ -214,7 +305,11 @@ class PairwiseCollector:
                     "prompt_response": res,
                     "chosen_profile": chosen_profile,
                     "profile_id": profile_id,
-                })
+                }
+                if self.logprobs_enabled:
+                    row["prob_chosen"] = prob_chosen
+                    row["prob_nochosen"] = prob_nochosen
+                writer.writerow(row)
 
         end_time = datetime.now()
         duration = round((end_time - start_time).total_seconds())
@@ -329,7 +424,10 @@ class PairwiseCollector:
                     prompt_labels,
                 )
 
-                res = self._call_api(prompt, reasoning_effort=reasoning_effort)
+                res, prob_chosen, prob_nochosen = self._call_api(
+                    prompt,
+                    reasoning_effort=reasoning_effort,
+                )
 
                 call_time = datetime.now()
                 logger.info(
@@ -340,9 +438,9 @@ class PairwiseCollector:
                 chosen_profile = profiles.get(res)
                 is_real_chosen = (res == labels[0])
 
-                writer.writerow({
-                    "model": self.model,
-                    "temperature": self.temperature,
+                row = {
+                    "model": self.logprobs_model if self.logprobs_enabled else self.model,
+                    "temperature": self.logprobs_temperature if self.logprobs_enabled else self.temperature,
                     "pair_id": pair_id,
                     "pair": profiles,
                     "prompt_variant": prompt_variant,
@@ -350,7 +448,11 @@ class PairwiseCollector:
                     "prompt_response": res,
                     "chosen_profile": chosen_profile,
                     "profile_id": real_profile_id if is_real_chosen else makeup_profile_id,
-                })
+                }
+                if self.logprobs_enabled:
+                    row["prob_chosen"] = prob_chosen
+                    row["prob_nochosen"] = prob_nochosen
+                writer.writerow(row)
 
         end_time = datetime.now()
         duration = round((end_time - start_time).total_seconds())
@@ -442,7 +544,10 @@ class PairwiseCollector:
                     prompt_labels,
                 )
 
-                res = self._call_api(prompt, reasoning_effort=reasoning_effort)
+                res, prob_chosen, prob_nochosen = self._call_api(
+                    prompt,
+                    reasoning_effort=reasoning_effort,
+                )
 
                 call_time = datetime.now()
                 logger.info(
@@ -453,9 +558,9 @@ class PairwiseCollector:
                 chosen_profile = profiles.get(res)
                 is_real_chosen = (res == labels[0])
 
-                writer.writerow({
-                    "model": self.model,
-                    "temperature": self.temperature,
+                row = {
+                    "model": self.logprobs_model if self.logprobs_enabled else self.model,
+                    "temperature": self.logprobs_temperature if self.logprobs_enabled else self.temperature,
                     "pair_id": pair_id,
                     "pair": profiles,
                     "prompt_variant": prompt_variant,
@@ -463,7 +568,11 @@ class PairwiseCollector:
                     "prompt_response": res,
                     "chosen_profile": chosen_profile,
                     "profile_id": real_profile_id if is_real_chosen else f"top_{pair_id}",
-                })
+                }
+                if self.logprobs_enabled:
+                    row["prob_chosen"] = prob_chosen
+                    row["prob_nochosen"] = prob_nochosen
+                writer.writerow(row)
 
         end_time = datetime.now()
         duration = round((end_time - start_time).total_seconds())
@@ -543,7 +652,6 @@ class PairwiseCollector:
             {
                 "role": "system",
                 "content": (
-                    f"Assume the current date is {context_date}. "
                     "The following context is provided:\n"
                     f"{context_text}\n"
                 ),
@@ -587,9 +695,13 @@ class PairwiseCollector:
                     prompt_variant,
                     list(profiles.values()),
                     labels,
+                    date_override=context_date,
                 )
                 prompt = external_knowledge + prompt
-                res = self._call_api(prompt, reasoning_effort=reasoning_effort)
+                res, prob_chosen, prob_nochosen = self._call_api(
+                    prompt,
+                    reasoning_effort=reasoning_effort,
+                )
 
                 call_time = datetime.now()
                 logger.info(
@@ -600,19 +712,21 @@ class PairwiseCollector:
                 chosen_profile = profiles.get(res)
                 chosen_id = ids[labels.index(res)] if chosen_profile else None
 
-                writer.writerow(
-                    {
-                        "model": self.model,
-                        "temperature": self.temperature,
-                        "pair_id": pair_id,
-                        "pair": profiles,
-                        "prompt_variant": prompt_variant,
-                        "prompt": prompt,
-                        "prompt_response": res,
-                        "chosen_profile": chosen_profile,
-                        "profile_id": chosen_id,
-                    }
-                )
+                row = {
+                    "model": self.logprobs_model if self.logprobs_enabled else self.model,
+                    "temperature": self.logprobs_temperature if self.logprobs_enabled else self.temperature,
+                    "pair_id": pair_id,
+                    "pair": profiles,
+                    "prompt_variant": prompt_variant,
+                    "prompt": prompt,
+                    "prompt_response": res,
+                    "chosen_profile": chosen_profile,
+                    "profile_id": chosen_id,
+                }
+                if self.logprobs_enabled:
+                    row["prob_chosen"] = prob_chosen
+                    row["prob_nochosen"] = prob_nochosen
+                writer.writerow(row)
 
         end_time = datetime.now()
         duration = round((end_time - start_time).total_seconds())
@@ -808,7 +922,10 @@ class PairwiseCollector:
                     prompt_labels,
                 )
                 final_prompt, sources = _prepend_rag_to_prompt(base_prompt)
-                res = self._call_api(final_prompt, reasoning_effort=reasoning_effort)
+                res, prob_chosen, prob_nochosen = self._call_api(
+                    final_prompt,
+                    reasoning_effort=reasoning_effort,
+                )
 
                 call_time = datetime.now()
                 logger.info(
@@ -820,21 +937,23 @@ class PairwiseCollector:
                 is_real_chosen = (res == labels[0])
                 makeup_profile_id = makeup_profile.get("profile_id")
 
-                writer.writerow(
-                    {
-                        "model": self.model,
-                        "temperature": self.temperature,
-                        "pair_id": pair_id,
-                        "pair": profiles,
-                        "prompt_variant": prompt_variant,
-                        "prompt": final_prompt,
-                        "prompt_response": res,
-                        "chosen_profile": chosen_profile,
-                        "profile_id": real_profile_id if is_real_chosen else makeup_profile_id,
-                        "retrieval_context": f"{{'k': {rag_k}, 'per_chars': {rag_per_chars}}}",
-                        "retrieval_hits": sources,
-                    }
-                )
+                row = {
+                    "model": self.logprobs_model if self.logprobs_enabled else self.model,
+                    "temperature": self.logprobs_temperature if self.logprobs_enabled else self.temperature,
+                    "pair_id": pair_id,
+                    "pair": profiles,
+                    "prompt_variant": prompt_variant,
+                    "prompt": final_prompt,
+                    "prompt_response": res,
+                    "chosen_profile": chosen_profile,
+                    "profile_id": real_profile_id if is_real_chosen else makeup_profile_id,
+                    "retrieval_context": f"{{'k': {rag_k}, 'per_chars': {rag_per_chars}}}",
+                    "retrieval_hits": sources,
+                }
+                if self.logprobs_enabled:
+                    row["prob_chosen"] = prob_chosen
+                    row["prob_nochosen"] = prob_nochosen
+                writer.writerow(row)
 
         end_time = datetime.now()
         duration = round((end_time - start_time).total_seconds())

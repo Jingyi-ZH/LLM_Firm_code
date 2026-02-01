@@ -164,9 +164,9 @@ LLM_Firm_code/
 │   ├── dimensionality_reduction/
 │   ├── interpretability/
 │   ├── method_compare/
-│   ├── auxiliary/
-│   └── rag/
+│   └── auxiliary/
 ├── RAG_langchain/          # RAG scripts and utilities
+│   └── rag_langchain.ipynb
 ├── data/                   # Data files
 │   ├── profiles_shuffled.csv
 │   ├── real_profiles.csv   # Legacy (real profiles now in config/config.yaml)
@@ -258,6 +258,16 @@ python scripts/run_collection.py --experiment basic --start 0 --end 10000 \
 
 This splits `[start, end)` into N equal chunks (one per key) and runs them concurrently.
 
+### Logprobs (Optional)
+Enable logprobs to capture per-label probabilities in the CSV output.
+This adds two columns: `prob_chosen` and `prob_nochosen`.
+Supported for basic/fixreal/top/context/rag-faiss and rag (LangChain).
+
+```bash
+python scripts/run_collection.py --experiment basic --start 0 --end 10000 \
+  --logprobs on
+```
+
 ### 2. Real vs. Makeup Comparison
 Compares real iPhone 16/17 specifications against makeup profiles.
 
@@ -302,6 +312,7 @@ Context examples:
 
 ### 5. RAG-Augmented Real vs. Makeup
 Default RAG uses the LangChain pipeline in `RAG_langchain/`.
+The notebook lives at `RAG_langchain/rag_langchain.ipynb`.
 
 ```bash
 python scripts/run_collection.py --experiment rag \
@@ -346,6 +357,7 @@ Optional:
 - `--api-key-env` (single API key env var; optional)
 - `--api-key-envs` (comma-separated API key env vars for parallel `basic`; optional)
 - `--reasoning-effort` (override `openai.reasoning_effort`)
+- `--logprobs` (`on|off`; overrides `openai.logprobs.enabled`)
 - `--model` (rag only; override `openai.model`)
 - `--temperature` (rag only; override `openai.temperature`)
 - `--sample-ids-file` (context only)
