@@ -21,6 +21,7 @@ _script_dir = Path(__file__).resolve().parent
 _project_root = _script_dir.parent
 sys.path.insert(0, str(_project_root))
 
+from config import get_config
 from llm_belief.preprocessing import ProfileGenerator
 
 
@@ -48,11 +49,13 @@ Examples:
         required=True,
         help="Preprocessing task to run",
     )
+    cfg = get_config()
+    default_seed = cfg.get("project", "random_seed", default=2025)
     parser.add_argument(
         "--seed",
         type=int,
-        default=2025,
-        help="Random seed for reproducibility (default: 2025)",
+        default=default_seed,
+        help="Random seed for reproducibility (default from config)",
     )
     parser.add_argument(
         "--output",

@@ -74,7 +74,7 @@ python scripts/run_collection.py --experiment fixreal --real-profile "iPhone 16 
 # Output: output/{real_profile_id_with_underscores}_fixreal{n_makeup}.csv
 
 # Real vs. top scored profiles
-python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro" --n-top 50
+python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro" --n-top 50c
 # Output: output/{real_profile_id_with_underscores}_ntop{n_top}.csv
 
 # Real vs. makeup with injected context
@@ -346,6 +346,8 @@ Optional:
 - `--api-key-env` (single API key env var; optional)
 - `--api-key-envs` (comma-separated API key env vars for parallel `basic`; optional)
 - `--reasoning-effort` (override `openai.reasoning_effort`)
+- `--model` (rag only; override `openai.model`)
+- `--temperature` (rag only; override `openai.temperature`)
 - `--sample-ids-file` (context only)
 - `--scored-limit` (context only)
 - `--context-date` (context only)

@@ -40,8 +40,20 @@ def read_arguments():
     parser.add_argument(
         "--reasoning-effort",
         type=str,
-        default="medium",
+        default=None,
         help="Override reasoning effort",
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default=None,
+        help="Override model name",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=None,
+        help="Override sampling temperature",
     )
 
     args = parser.parse_args()
@@ -62,10 +74,22 @@ sample_limit = cfg.get("collection", "fixreal_sample_limit", default=20000)
 seed = cfg.get("project", "random_seed", default=2025)
 random.seed(seed)
 
+model_name = args.model or cfg.get("openai", "model", default="gpt-5-nano")
+temperature = (
+    args.temperature
+    if args.temperature is not None
+    else cfg.get("openai", "temperature", default=1.0)
+)
+reasoning_effort = (
+    args.reasoning_effort
+    if args.reasoning_effort is not None
+    else cfg.get("openai", "reasoning_effort", default="medium")
+)
+
 llm = init_chat_model(
-    "gpt-5-nano",
-    temperature=1,
-    reasoning_effort=args.reasoning_effort,
+    model_name,
+    temperature=temperature,
+    reasoning_effort=reasoning_effort,
     model_provider="openai",
 )
 

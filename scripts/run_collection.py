@@ -179,6 +179,16 @@ Examples:
         type=str,
         help="Override reasoning effort (optional)",
     )
+    parser.add_argument(
+        "--model",
+        type=str,
+        help="Override model name (rag only)",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        help="Override sampling temperature (rag only)",
+    )
 
     args = parser.parse_args()
 
@@ -279,6 +289,10 @@ Examples:
         ]
         if args.reasoning_effort:
             cmd += ["--reasoning-effort", args.reasoning_effort]
+        if args.model:
+            cmd += ["--model", args.model]
+        if args.temperature is not None:
+            cmd += ["--temperature", str(args.temperature)]
         if args.n_makeup is not None:
             cmd += ["--n_makeup", str(args.n_makeup)]
         subprocess.run(cmd, check=True)
