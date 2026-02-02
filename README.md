@@ -47,6 +47,7 @@ cp .env.example .env
 ```
 
 All other configuration options are in `config/config.yaml`.
+Note: `logprobs=on` only works with non-reasoning models.
 
 ### 3. Generate Hypothetical Profiles
 
@@ -66,7 +67,7 @@ This creates `data/profiles_shuffled.csv` from `config/config.yaml`.
 
 ```bash
 # Basic pairwise comparison (10,000 pairs)
-python scripts/run_collection.py --experiment basic --start 0 --end 1000
+python scripts/run_collection.py --experiment basic --start 0 --end 1000 --logprobs on
 # Output: output/{start}_{end}.csv (e.g., output/0_1000.csv)
 
 # Real vs. makeup profile comparison
