@@ -109,6 +109,24 @@ class PairwiseCollector:
             cols += ["prob_chosen", "prob_nochosen"]
         return cols
 
+    def _log_run_config(self, logger: logging.Logger) -> None:
+        """Log the actual model settings used for the API call."""
+        if self.logprobs_enabled:
+            logger.info(
+                "Using logprobs model: %s with temperature: %s, max_output_tokens: %s, top_logprobs: %s",
+                self.logprobs_model,
+                self.logprobs_temperature,
+                self.logprobs_max_output_tokens,
+                self.logprobs_top_logprobs,
+            )
+        else:
+            logger.info(
+                "Using model: %s with temperature: %s, reasoning_effort: %s",
+                self.model,
+                self.temperature,
+                self.reasoning_effort,
+            )
+
     @staticmethod
     def _get_field(obj: Any, key: str, default: Any = None) -> Any:
         if isinstance(obj, dict):
@@ -234,7 +252,7 @@ class PairwiseCollector:
         """
         # Setup logging
         logger = get_experiment_logger("pair", f"{start_idx}_{end_idx}")
-        logger.info(f"Using model: {self.model} with temperature: {self.temperature}")
+        self._log_run_config(logger)
 
         # Load profiles
         profiles_file = self.cfg.get('collection', 'profiles_file')
@@ -348,7 +366,7 @@ class PairwiseCollector:
         # Setup logging
         safe_id = real_profile_id.replace(" ", "_")
         logger = get_experiment_logger("fixreal", safe_id)
-        logger.info(f"Using model: {self.model} with temperature: {self.temperature}")
+        self._log_run_config(logger)
         logger.info(f"Real profile: {real_profile_id}, n_makeup: {n_makeup}")
 
         # Load real profiles from config
@@ -487,7 +505,7 @@ class PairwiseCollector:
         # Setup logging
         safe_id = real_profile_id.replace(" ", "_")
         logger = get_experiment_logger("top", f"{safe_id}_ntop{n_top}")
-        logger.info(f"Using model: {self.model} with temperature: {self.temperature}")
+        self._log_run_config(logger)
         logger.info(f"Real profile: {real_profile_id}, n_top: {n_top}")
 
         # Load real profiles from config
@@ -603,7 +621,7 @@ class PairwiseCollector:
         """
         safe_id = real_profile_id.replace(" ", "_")
         logger = get_experiment_logger("reali16_fixreal", safe_id)
-        logger.info(f"Using model: {self.model} with temperature: {self.temperature}")
+        self._log_run_config(logger)
         logger.info(f"Real profile: {real_profile_id}")
 
         profiles_file = self.cfg.get("collection", "profiles_file")
@@ -763,7 +781,7 @@ class PairwiseCollector:
 
         safe_id = real_profile_id.replace(" ", "_")
         logger = get_experiment_logger("rag_fixreal", safe_id)
-        logger.info(f"Using model: {self.model} with temperature: {self.temperature}")
+        self._log_run_config(logger)
         logger.info(f"Real profile: {real_profile_id}, n_makeup: {n_makeup}")
 
         rag_faiss = rag_faiss or os.getenv("RAG_FAISS")
