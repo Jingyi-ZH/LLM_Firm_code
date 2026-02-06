@@ -230,6 +230,30 @@ class PairwiseCollector:
         prompt_pair = [profiles[prompt_labels[0]], profiles[prompt_labels[1]]]
         return prompt_pair, prompt_labels
 
+    def _get_real_profile_formatted(
+        self,
+        real_profile_id: str,
+        real_profile: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Resolve and format a real profile for prompts.
+
+        Args:
+            real_profile_id: Identifier used for logging/output and (if needed) config lookup.
+            real_profile: Optional explicit profile dict (bypasses config lookup).
+
+        Returns:
+            Formatted profile dict suitable for prompt injection.
+        """
+        if real_profile is not None:
+            if not isinstance(real_profile, dict):
+                raise TypeError("real_profile must be a dict when provided")
+            return format_profile_for_prompt(real_profile)
+
+        real_profiles = get_real_profiles()
+        if real_profile_id not in real_profiles:
+            raise ValueError(f"Real profile '{real_profile_id}' not found")
+        return format_profile_for_prompt(real_profiles[real_profile_id])
+
     def collect_basic(
         self,
         start_idx: int,
@@ -343,6 +367,7 @@ class PairwiseCollector:
         n_makeup: Optional[int] = None,
         reasoning_effort: Optional[str] = None,
         output_file: Optional[str] = None,
+        real_profile: Optional[Dict[str, Any]] = None,
     ) -> Path:
         """Run real vs. makeup profile comparison experiment.
 
@@ -370,10 +395,10 @@ class PairwiseCollector:
         logger.info(f"Real profile: {real_profile_id}, n_makeup: {n_makeup}")
 
         # Load real profiles from config
-        real_profiles = get_real_profiles()
-        if real_profile_id not in real_profiles:
-            raise ValueError(f"Real profile '{real_profile_id}' not found")
-        real_profile = format_profile_for_prompt(real_profiles[real_profile_id])
+        real_profile = self._get_real_profile_formatted(
+            real_profile_id,
+            real_profile=real_profile,
+        )
 
         # Load generated profiles for comparison
         profiles_file = self.cfg.get('collection', 'profiles_file')
@@ -486,6 +511,7 @@ class PairwiseCollector:
         score_column: str = "MLP_score",
         reasoning_effort: Optional[str] = None,
         output_file: Optional[str] = None,
+        real_profile: Optional[Dict[str, Any]] = None,
     ) -> Path:
         """Run real vs. top-scored profile comparison experiment.
 
@@ -509,10 +535,10 @@ class PairwiseCollector:
         logger.info(f"Real profile: {real_profile_id}, n_top: {n_top}")
 
         # Load real profiles from config
-        real_profiles = get_real_profiles()
-        if real_profile_id not in real_profiles:
-            raise ValueError(f"Real profile '{real_profile_id}' not found")
-        real_profile = format_profile_for_prompt(real_profiles[real_profile_id])
+        real_profile = self._get_real_profile_formatted(
+            real_profile_id,
+            real_profile=real_profile,
+        )
 
         # Load and sort scored profiles
         scored_file = self.cfg.get('collection', 'scored_profiles_file')
@@ -607,6 +633,7 @@ class PairwiseCollector:
         output_file: Optional[str] = None,
         context_date: str = "2025-03-15",
         reasoning_effort: Optional[str] = None,
+        real_profile: Optional[Dict[str, Any]] = None,
     ) -> Path:
         """Run fixreal with injected context from a text file.
 
@@ -653,10 +680,10 @@ class PairwiseCollector:
         base_cols = list(profiles_df.columns)
         df = rearrange_dataframe(sampled[base_cols]).reset_index(drop=True)
 
-        real_profiles = get_real_profiles()
-        if real_profile_id not in real_profiles:
-            raise ValueError(f"Real profile '{real_profile_id}' not found")
-        real_profile_formatted = format_profile_for_prompt(real_profiles[real_profile_id])
+        real_profile_formatted = self._get_real_profile_formatted(
+            real_profile_id,
+            real_profile=real_profile,
+        )
 
         context_path = Path(context_file)
         if not context_path.is_absolute():
@@ -765,6 +792,7 @@ class PairwiseCollector:
         rag_embed_model: str = "text-embedding-3-small",
         output_file: Optional[str] = None,
         reasoning_effort: Optional[str] = None,
+        real_profile: Optional[Dict[str, Any]] = None,
     ) -> Path:
         """Run fixreal with RAG context prepended."""
         try:
@@ -790,10 +818,10 @@ class PairwiseCollector:
             raise ValueError("RAG_FAISS and RAG_META must be provided for RAG runs.")
 
         # Load real profiles from config
-        real_profiles = get_real_profiles()
-        if real_profile_id not in real_profiles:
-            raise ValueError(f"Real profile '{real_profile_id}' not found")
-        real_profile = format_profile_for_prompt(real_profiles[real_profile_id])
+        real_profile = self._get_real_profile_formatted(
+            real_profile_id,
+            real_profile=real_profile,
+        )
 
         # Load generated profiles and reuse fixed sample ids
         profiles_file = self.cfg.get("collection", "profiles_file")

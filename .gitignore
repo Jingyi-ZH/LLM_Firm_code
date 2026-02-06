@@ -99,6 +99,7 @@ RAG_langchain/wayback_fetch/wayback_downloads/
 # Data / Analysis Results
 # =========================
 *.csv
+!experiments/alternatives/*.csv
 *.xlsx
 *.png
 *.jpg
@@ -120,6 +121,7 @@ models/*.pkl
 *.temp
 *.bak
 *.npy
+!data/sample5000_profile_ids.npy
 *.pkl
 *.jsonl
 *.faiss

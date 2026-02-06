@@ -65,43 +65,7 @@ This creates `data/profiles_shuffled.csv` from `config/config.yaml`.
 
 ### 4. Run Data Collection
 
-```bash
-# Basic pairwise comparison (10,000 pairs)
-python scripts/run_collection.py --experiment basic --start 0 --end 1000 --logprobs on
-# Output: output/{start}_{end}.csv (e.g., output/0_1000.csv)
-
-# Real vs. makeup profile comparison
-python scripts/run_collection.py --experiment fixreal --real-profile "iPhone 16 Pro"
-# Output: output/{real_profile_id_with_underscores}_fixreal{n_makeup}.csv
-
-# Real vs. top scored profiles
-python scripts/run_collection.py --experiment top --real-profile "iPhone 16 Pro" --n-top 50c
-# Output: output/{real_profile_id_with_underscores}_ntop{n_top}.csv
-
-# Real vs. makeup with injected context
-python scripts/run_collection.py --experiment context --real-profile "iPhone 16 Pro" \
-  --context data/re16.txt
-# Output: output/context_{real_profile_id_with_underscores}_fixreal_{N}.csv
-# Sampling: uses the same random sample as fixreal from `data/profiles_shuffled.csv`
-# and saves/reads `data/sample{n_makeup}_profile_ids.npy`.
-
-# RAG (default: RAG_langchain pipeline)
-python scripts/run_collection.py --experiment rag --real-profile "iPhone 16 Pro" \
-  --api-key-env OPENAI_API_KEY
-# Output: output/rag_langchain_{real_profile_id}_fixreal{n_makeup}.csv
-# Requires `output/{real_profile_id_with_underscores}_fixreal{n_makeup}.csv` from fixreal.
-
-# Optional: custom FAISS-based RAG (requires index paths)
-python scripts/run_collection.py --experiment rag-faiss --real-profile "iPhone 16 Pro" \
-  --rag-faiss path/to/index.faiss --rag-meta path/to/records.jsonl
-# Output: output/RAG_{real_profile_id_with_underscores}_fixreal_{n_makeup}.csv
-```
-
-Notes:
-- Default RAG workflow lives in `RAG_langchain/` and is invoked via `--experiment rag`.
-- There is also a separate custom RAG pipeline under `RAG/` (not default). If you have
-  that folder, `bash scripts/run_rag_pipeline.sh` builds the FAISS index using
-  `RAG/rag_build.py`.
+Use the Collector CLI (`llm-collect` or `python scripts/run_collection.py`). See **Collector (run_collection.py / llm-collect)** below for the full parameter list, defaults, and examples.
 
 ### 5. Run Model Training
 
@@ -241,132 +205,132 @@ Real profiles are defined in `config/config.yaml` under `real_profiles`. Prompts
 
 ## Experiments
 
-### 1. Basic Pairwise Comparison
-Compares 10,000 pairs of hypothetical iPhone profiles to learn LLM preferences.
+This project supports the following experiment modes:
+- `basic`: pairwise comparisons between hypothetical profiles.
+- `fixreal`: pairwise comparisons between a *real* profile and sampled hypothetical (“makeup”) profiles.
+- `top`: comparisons between a real profile and the top-scored hypothetical profiles.
+- `context`: fixreal with injected context text (system message).
+- `rag`: fixreal with RAG context via the `RAG_langchain/` pipeline.
+- `rag-faiss`: fixreal with a custom FAISS-based retriever (local index + metadata).
 
+See **Collector (run_collection.py / llm-collect)** for how to run each mode and where outputs are written.
+
+## Collector (run_collection.py / llm-collect)
+
+Entry points:
+- `python scripts/run_collection.py ...`
+- `llm-collect ...` (same CLI, installed by `pip install -e .`)
+
+### Parameters (mandatory vs optional)
+
+| Parameter | Required? | Applies to | Meaning / expected input |
+|---|---:|---|---|
+| `--experiment` | Yes | all | One of `basic\|fixreal\|top\|context\|rag\|rag-faiss`. |
+| `--start` | Yes* | `basic` | Start index (inclusive) of pair range. |
+| `--end` | Yes* | `basic` | End index (exclusive) of pair range. |
+| `--real-profile` | Yes* | all except `basic` | **Usually**: a real profile id from `config/config.yaml` → `real_profiles`. **Special (fixreal only)**: you may pass a `.csv` path to run fixreal once per row (see below). |
+| `--context` | Yes* | `context` | Context text file path (relative to project `data/` or absolute). |
+| `--n-makeup` | Optional | `fixreal`, `rag`, `rag-faiss` | Number of sampled makeup profiles. Default: `config/config.yaml` → `collection.default_n_makeup` (currently 5000). |
+| `--n-top` | Optional | `top` | Number of top-scored profiles to compare against. |
+| `--output` | Optional | most modes | Output **filename** or **folder** (see output rules below). |
+| `--api-key-env` | Optional | collector modes | Env var name holding the API key (defaults to config `openai.api_key_env_var`). |
+| `--api-key-envs` | Optional | `basic` | Comma-separated API key env vars; splits `[start,end)` into chunks and runs in parallel. |
+| `--reasoning-effort` | Optional | collector modes | Overrides config `openai.reasoning_effort` (note: ignored when `--logprobs on`; see below). |
+| `--logprobs` | Optional | collector modes | `on` or `off`; overrides config `openai.logprobs.enabled`. Adds `prob_chosen` / `prob_nochosen` columns. |
+| `--sample-ids-file` | Optional | `context` | NPY filename under `data/` storing sampled makeup profile ids. Default: `sample5k_profile_ids.npy`. |
+| `--scored-limit` | Optional | `context` | Limits the rows considered when sampling. |
+| `--context-date` | Optional | `context` | Injected “current date” string used in the system prompt. |
+| `--rag-faiss` | Optional* | `rag-faiss` | Path to FAISS index (or set env `RAG_FAISS`). |
+| `--rag-meta` | Optional* | `rag-faiss` | Path to metadata jsonl (or set env `RAG_META`). |
+| `--rag-k` | Optional | `rag-faiss` | Top-k chunks to retrieve (default: 3). |
+| `--rag-per-chars` | Optional | `rag-faiss` | Max chars per retrieved chunk (default: 1200). |
+| `--rag-embed-model` | Optional | `rag-faiss` | Embedding model name for retrieval. |
+| `--exclude-ids-file` | Optional | `rag-faiss` | NPY filename under `data/` listing profile_ids to exclude from sampling. |
+| `--model` | Optional | `rag` | Override model name (rag only; forwarded to `RAG_langchain`). |
+| `--temperature` | Optional | `rag` | Override temperature (rag only; forwarded to `RAG_langchain`). |
+
+Notes:
+- `Yes*` means “required only for that experiment mode”.
+- For `rag-faiss`, `--rag-faiss`/`--rag-meta` are required via flags or env vars.
+
+### Fixreal: `--real-profile` can be a CSV path (batch mode)
+
+For `--experiment fixreal`, you may set `--real-profile` to a `.csv` path. The collector will run fixreal once per row.
+
+CSV requirements:
+- Must contain a `real_profile_id` column.
+- Must contain **all attributes** as columns, using either:
+  - config keys (e.g., `battery_life`, `screen_size`, ...), or
+  - config display names (e.g., `battery life (in hours of video playback)`, ...).
+
+Output behavior:
+- Writes one file per row as `{real_profile_id_with_underscores}_fixreal{n_makeup}.csv`.
+- If `--output` is provided in batch mode, it must be a **folder** (not a filename).
+
+### Output rules (`--output`)
+
+If `--output` is omitted, outputs go under `output/` with default filenames.
+
+If `--output` **looks like a folder path** (e.g. ends with `/`, exists as a directory, or has no extension), outputs are written under that folder:
+- Relative paths are interpreted under `output/` (e.g., `--output batch_outputs/` → `output/batch_outputs/`).
+- Absolute paths are used as-is.
+
+If `--output` looks like a filename, it is used as the exact output file name (single-output modes only).
+
+### Sampling reuse (`n_makeup`)
+
+Fixreal sampling reuses a deterministic cached id list:
+- When `n_makeup=5000`, the collector writes/reads `data/sample5000_profile_ids.npy`.
+- If the file exists, it is reused (no re-sampling), keeping comparisons consistent across runs.
+
+### Logprobs vs reasoning effort
+
+When `--logprobs on`, the collector uses a separate “logprobs model” config and does **not** pass `reasoning_effort` to the API call (so `--reasoning-effort` is effectively ignored for those calls).
+
+### Examples
+
+Basic:
 ```bash
-python scripts/run_collection.py --experiment basic --start 0 --end 10000
+llm-collect --experiment basic --start 0 --end 10000
 ```
-LLM responses are recorded in `output/{start}_{end}.csv` (e.g., `output/0_10000.csv`).
 
-### Parallel Basic Collection (Multiple API Keys)
-Provide a comma-separated list of API key env vars to parallelize the range:
-
+Basic (parallel):
 ```bash
-python scripts/run_collection.py --experiment basic --start 0 --end 10000 \
-  --api-key-envs OPENAI_KEY_1,OPENAI_KEY_2,OPENAI_KEY_3,OPENAI_KEY_4,OPENAI_KEY_5
+llm-collect --experiment basic --start 0 --end 10000 \
+  --api-key-envs OPENAI_KEY_1,OPENAI_KEY_2,OPENAI_KEY_3
 ```
 
-This splits `[start, end)` into N equal chunks (one per key) and runs them concurrently.
-
-### Logprobs (Optional)
-Enable logprobs to capture per-label probabilities in the CSV output.
-This adds two columns: `prob_chosen` and `prob_nochosen`.
-Supported for basic/fixreal/top/context/rag-faiss and rag (LangChain).
-
+Fixreal (single id from config):
 ```bash
-python scripts/run_collection.py --experiment basic --start 0 --end 10000 \
-  --logprobs on
+llm-collect --experiment fixreal --real-profile "iPhone 16 Pro" --n-makeup 5000
 ```
 
-### 2. Real vs. Makeup Comparison
-Compares real iPhone 16/17 specifications against makeup profiles.
-
+Fixreal (CSV batch, write into a folder):
 ```bash
-python scripts/run_collection.py --experiment fixreal \
-    --real-profile "iPhone 16 Pro" \
-    --n-makeup 5000
+llm-collect --experiment fixreal --real-profile data/custom_real_profiles.csv \
+  --n-makeup 5000 --output batch_outputs/
 ```
-LLM responses are recorded in `output/{real_profile_id_with_underscores}_fixreal{n_makeup}.csv`.
-Sampled makeup profile ids are saved to `data/sample{n_makeup}_profile_ids.npy`.
 
-### 3. Real vs. Top-Scored Comparison
-Compares real specifications against top-scored profiles.
-
+Top:
 ```bash
-python scripts/run_collection.py --experiment top \
-    --real-profile "iPhone 16 Pro" \
-    --n-top 50
+llm-collect --experiment top --real-profile "iPhone 16 Pro" --n-top 50
 ```
-LLM responses are recorded in `output/{real_profile_id_with_underscores}_ntop{n_top}.csv`.
-Requires `data/scored_profiles_shuffled.csv` (generated by training/scoring).
-Generate it first via:
+
+Context:
 ```bash
-python scripts/run_training.py --model logistic --input-glob "output/*_*.csv"
+llm-collect --experiment context --real-profile "iPhone 16 Pro" --context data/re16.txt
 ```
 
-### 4. Real vs. Makeup with Context Injection
-Injects external context from a text file as system context.
-
+RAG (LangChain pipeline in `RAG_langchain/`):
 ```bash
-python scripts/run_collection.py --experiment context \
-    --real-profile "iPhone 16 Pro" \
-    --context data/re16.txt
+llm-collect --experiment rag --real-profile "iPhone 16 Pro" --api-key-env OPENAI_API_KEY
 ```
-LLM responses are recorded in `output/context_{real_profile_id_with_underscores}_fixreal_{N}.csv`.
-Sampling matches fixreal: random sample from `data/profiles_shuffled.csv`,
-saved to `data/sample{n_makeup}_profile_ids.npy` (seed 2025).
 
-Context examples:
-- `data/re16.txt`: released iPhone 16 lineup specs (generated from config)
-- `data/re16ru17.txt`: released iPhone specs + iPhone 17 rumor summary
-
-### 5. RAG-Augmented Real vs. Makeup
-Default RAG uses the LangChain pipeline in `RAG_langchain/`.
-The notebook lives at `RAG_langchain/rag_langchain.ipynb`.
-
+RAG (FAISS):
 ```bash
-python scripts/run_collection.py --experiment rag \
-    --real-profile "iPhone 16 Pro" \
-    --api-key-env OPENAI_API_KEY
+llm-collect --experiment rag-faiss --real-profile "iPhone 16 Pro" \
+  --rag-faiss path/to/index.faiss --rag-meta path/to/records.jsonl
 ```
-LLM responses are recorded in `output/rag_langchain_{real_profile_id}_fixreal{n_makeup}.csv`.
-Requires `output/{real_profile_id_with_underscores}_fixreal{n_makeup}.csv` from fixreal.
-Sampling matches fixreal: random sample from `data/profiles_shuffled.csv`,
-saved to `data/sample{n_makeup}_profile_ids.npy` (seed 2025).
-
-Optional: custom FAISS-based RAG (requires index paths):
-
-```bash
-python scripts/run_collection.py --experiment rag-faiss \
-    --real-profile "iPhone 16 Pro" \
-    --rag-faiss path/to/index.faiss \
-    --rag-meta path/to/records.jsonl
-```
-LLM responses are recorded in `output/RAG_{real_profile_id_with_underscores}_fixreal_{n_makeup}.csv`.
-Sampling matches fixreal: random sample from `data/profiles_shuffled.csv`,
-saved to `data/sample{n_makeup}_profile_ids.npy` (seed 2025).
-
-## `run_collection.py` CLI
-
-### Purpose
-Runs data-collection experiments for pairwise comparisons.
-
-### Arguments
-Required:
-- `--experiment` (`basic|fixreal|top|context|rag|rag-faiss`)
-
-Conditional required:
-- `--start`, `--end` (required for `basic`)
-- `--real-profile` (required for `fixreal`, `top`, `context`, `rag`, `rag-faiss`)
-- `--context` (required for `context`)
-
-Optional:
-- `--n-makeup` (fixreal, rag, rag-faiss; default from `config/config.yaml` → `collection.default_n_makeup`)
-- `--n-top` (top only, no default)
-- `--output` (custom output filename)
-- `--api-key-env` (single API key env var; optional)
-- `--api-key-envs` (comma-separated API key env vars for parallel `basic`; optional)
-- `--reasoning-effort` (override `openai.reasoning_effort`)
-- `--logprobs` (`on|off`; overrides `openai.logprobs.enabled`)
-- `--model` (rag only; override `openai.model`)
-- `--temperature` (rag only; override `openai.temperature`)
-- `--sample-ids-file` (context only)
-- `--scored-limit` (context only)
-- `--context-date` (context only)
-- `--rag-faiss`, `--rag-meta` (rag-faiss only; or set `RAG_FAISS`/`RAG_META`)
-- `--rag-k`, `--rag-per-chars`, `--rag-embed-model` (rag-faiss only)
-- `--exclude-ids-file` (rag-faiss only)
 
 ## Models
 

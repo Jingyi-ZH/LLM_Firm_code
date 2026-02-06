@@ -32,13 +32,136 @@ import sys
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from typing import Optional, List, Tuple, Dict, Any
 
 # Add project root to path
 _script_dir = Path(__file__).resolve().parent
 _project_root = _script_dir.parent
 sys.path.insert(0, str(_project_root))
 
+import pandas as pd
+
+from config import get_config
 from llm_belief.data_collection import PairwiseCollector
+
+
+def _is_output_dir_arg(output_arg: str) -> bool:
+    if not output_arg:
+        return False
+    # Treat as directory when:
+    # - user explicitly ends with a path separator
+    # - path exists and is a directory
+    # - no suffix and no dot in the final path segment (common "folder" case)
+    if output_arg.endswith(("/", "\\")):
+        return True
+    p = Path(output_arg)
+    if p.exists() and p.is_dir():
+        return True
+    return p.suffix == "" and "." not in p.name
+
+
+def _resolve_output_dir(output_arg: str) -> Path:
+    """Resolve an output directory path.
+
+    - Absolute paths are used as-is.
+    - Relative paths are interpreted under the configured output/ directory.
+    """
+    p = Path(output_arg)
+    if p.is_absolute():
+        out_dir = p
+    else:
+        out_dir = get_config().get_path("output_dir") / p
+    out_dir.mkdir(parents=True, exist_ok=True)
+    return out_dir
+
+
+def _load_fixreal_real_profiles_csv(
+    real_profile_arg: str,
+) -> Optional[List[Tuple[str, Dict[str, Any]]]]:
+    """If real_profile_arg points to a CSV file, load real profiles from it.
+
+    CSV requirements:
+      - Column: real_profile_id
+      - All attributes present as columns (either config keys like 'battery_life'
+        or their config display names like 'battery life (in hours of video playback)').
+    """
+    path_arg = Path(real_profile_arg)
+    if path_arg.suffix.lower() != ".csv":
+        return None
+
+    if path_arg.is_absolute():
+        path = path_arg
+    else:
+        cwd_path = Path.cwd() / path_arg
+        root_path = _project_root / path_arg
+        if cwd_path.is_file():
+            path = cwd_path
+        elif root_path.is_file():
+            path = root_path
+        else:
+            raise FileNotFoundError(
+                f"--real-profile looks like a CSV path but was not found: {path_arg}"
+            )
+
+    if not path.is_file():
+        raise FileNotFoundError(f"Real profile CSV not found: {path}")
+
+    df = pd.read_csv(path)
+    if "real_profile_id" not in df.columns:
+        raise ValueError(f"CSV missing required column 'real_profile_id': {path}")
+
+    attrs = get_config().get_attributes() or {}
+    if not attrs:
+        raise ValueError("No attributes found in config; cannot validate CSV columns.")
+
+    attr_keys = list(attrs.keys())
+    col_for_key: dict[str, str] = {}
+    missing: list[str] = []
+    for key in attr_keys:
+        if key in df.columns:
+            col_for_key[key] = key
+            continue
+        name = attrs.get(key, {}).get("name", key)
+        if name in df.columns:
+            col_for_key[key] = name
+            continue
+        missing.append(key)
+
+    if missing:
+        expected_key_cols = attr_keys
+        expected_name_cols = [attrs.get(k, {}).get("name", k) for k in attr_keys]
+        raise ValueError(
+            "CSV missing required attribute columns.\n"
+            f"  file: {path}\n"
+            f"  missing (attribute keys): {missing}\n"
+            f"  expected columns include either keys: {expected_key_cols}\n"
+            f"  ...or display names: {expected_name_cols}"
+        )
+
+    profiles: list[tuple[str, dict]] = []
+    for row_idx, row in df.iterrows():
+        rid = row.get("real_profile_id")
+        if pd.isna(rid) or str(rid).strip() == "":
+            raise ValueError(f"Row {row_idx} has empty real_profile_id: {path}")
+        real_profile_id = str(rid).strip()
+
+        profile: dict[str, object] = {}
+        for key, col in col_for_key.items():
+            val = row.get(col)
+            if pd.isna(val):
+                raise ValueError(
+                    f"Row {row_idx} missing value for '{col}' (attribute '{key}'): {path}"
+                )
+            if hasattr(val, "item"):
+                try:
+                    val = val.item()
+                except Exception:
+                    pass
+            profile[key] = val
+
+        profiles.append((real_profile_id, profile))
+
+    return profiles
 
 
 def main():
@@ -97,7 +220,10 @@ Examples:
     parser.add_argument(
         "--real-profile",
         type=str,
-        help="Real profile ID for fixreal/top experiments (e.g., 'iPhone 16 Pro')",
+        help=(
+            "Real profile ID for fixreal/top/context/rag/rag-faiss experiments (e.g., 'iPhone 16 Pro'). "
+            "For fixreal only, you may also pass a CSV path to run fixreal once per row."
+        ),
     )
     parser.add_argument(
         "--n-makeup",
@@ -202,9 +328,12 @@ Examples:
     if args.experiment == "basic":
         if args.start is None or args.end is None:
             parser.error("--start and --end are required for basic experiment")
-    elif args.experiment in ["fixreal", "top", "context", "rag", "rag-faiss"]:
+    elif args.experiment in ["fixreal", "top", "context", "rag-faiss"]:
         if args.real_profile is None:
             parser.error(f"--real-profile is required for {args.experiment} experiment")
+    elif args.experiment == "rag":
+        if args.real_profile is None:
+            parser.error("--real-profile is required for rag experiment")
     if args.experiment == "context" and not args.context:
         parser.error("--context is required for context experiment")
 
@@ -264,11 +393,49 @@ Examples:
             api_key_env_var=args.api_key_env,
             logprobs=args.logprobs,
         )
+        try:
+            csv_profiles = _load_fixreal_real_profiles_csv(args.real_profile)
+        except (FileNotFoundError, ValueError, TypeError) as exc:
+            parser.error(str(exc))
+
+        output_dir = None
+        output_file = args.output
+        if args.output and _is_output_dir_arg(args.output):
+            output_dir = _resolve_output_dir(args.output)
+            output_file = None
+
+        cfg = get_config()
+        resolved_n_makeup = args.n_makeup or cfg.get("collection", "default_n_makeup", default=5000)
+        if csv_profiles is not None:
+            if output_file:
+                parser.error(
+                    "--output cannot be used when --real-profile is a CSV path. "
+                    "Use a folder path to write outputs under that folder."
+                )
+            for rid, profile in csv_profiles:
+                safe_id = rid.replace(" ", "_")
+                row_output_file = None
+                if output_dir is not None:
+                    row_output_file = str(output_dir / f"{safe_id}_fixreal{resolved_n_makeup}.csv")
+                output_path = collector.collect_fixreal(
+                    real_profile_id=rid,
+                    n_makeup=args.n_makeup,
+                    reasoning_effort=args.reasoning_effort,
+                    output_file=row_output_file,
+                    real_profile=profile,
+                )
+                print(f"\nOutput saved to: {output_path}")
+            return
+
         output_path = collector.collect_fixreal(
             real_profile_id=args.real_profile,
             n_makeup=args.n_makeup,
             reasoning_effort=args.reasoning_effort,
-            output_file=args.output,
+            output_file=(
+                str(output_dir / f"{args.real_profile.replace(' ', '_')}_fixreal{resolved_n_makeup}.csv")
+                if output_dir is not None
+                else output_file
+            ),
         )
     elif args.experiment == "top":
         collector = PairwiseCollector(
