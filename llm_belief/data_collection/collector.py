@@ -244,15 +244,26 @@ class PairwiseCollector:
         Returns:
             Formatted profile dict suitable for prompt injection.
         """
+        def _format_like_makeup(profile_cfg_keys: Dict[str, Any]) -> Dict[str, Any]:
+            attrs_cfg = self.cfg.get_attributes() or {}
+            display_row: Dict[str, Any] = {}
+            for key, value in (profile_cfg_keys or {}).items():
+                display_name = attrs_cfg.get(key, {}).get("name", key)
+                display_row[display_name] = value
+
+            df = pd.DataFrame([display_row])
+            df = rearrange_dataframe(df)
+            return df.iloc[0].to_dict()
+
         if real_profile is not None:
             if not isinstance(real_profile, dict):
                 raise TypeError("real_profile must be a dict when provided")
-            return format_profile_for_prompt(real_profile)
+            return _format_like_makeup(real_profile)
 
         real_profiles = get_real_profiles()
         if real_profile_id not in real_profiles:
             raise ValueError(f"Real profile '{real_profile_id}' not found")
-        return format_profile_for_prompt(real_profiles[real_profile_id])
+        return _format_like_makeup(real_profiles[real_profile_id])
 
     def collect_basic(
         self,
