@@ -7,13 +7,10 @@ This document describes how to reproduce **Experiment 1**: goal, inputs, setting
 ### 1) Goal (what we are measuring)
 The goal is to **position real iPhone profiles (e.g., iPhone 16) among a set of 100 representative hypothetical profiles** using a direct pairwise-comparison method.
 
-#######################################################<br>
-#########[We operationalize “positioning” as follows: TBD]#########<br>
-#######################################################<br>
-<!-- We operationalize “positioning” as follows:
+We operationalize “positioning” as follows:
 - Fix a shared set of `n_makeup=5000` hypothetical profiles (sampled once and reused).
 - For each target profile (a real iPhone profile, or one of the 100 representatives), run **fixreal** comparisons against the *same* fixed set of 5000 hypothetical profiles.
-- Compare the resulting win rates / logprobs-derived probabilities across targets to place real profiles relative to the representative set. -->
+- Use the resulting win rates / logprobs-derived probabilities to position (rank) the real iPhone profiles relative to the representative set.
 
 ### 2) The 100 representative profiles (AlgDesign, criterion = I)
 The file `experiments/alternatives/design100.csv` contains 100 “representative” hypothetical profiles selected using the R package `AlgDesign` with the **I** criterion (I-optimality).
@@ -31,6 +28,10 @@ Fixreal samples `n_makeup` `profile_ids` from the first `collection.fixreal_samp
 ### 4) Settings
 - `--logprobs on`: enables logprobs logging; the output CSV adds `prob_chosen` and `prob_nochosen`.
 - The logprobs model (`gpt-4.1-nano`)/temperature (`0`)/etc. are configured in `config/config.yaml` under `openai.logprobs.*`
+
+Note:
+- When `--logprobs on`, `--reasoning-effort` does not take effect (current implementation does not pass reasoning effort in the logprobs API call path).
+
 ### 5) Commands
 
 Run fixreal for the 100 representative profiles (one output per row):
@@ -44,3 +45,12 @@ Run fixreal for the real iPhone profiles (one output per row):
 llm-collect --experiment fixreal --real-profile experiments/alternatives/real_profiles.csv \
   --n-makeup 5000 --output experiments/experiment_1/ --logprobs on
 ```
+
+### 6) Outputs
+
+Each row (each `real_profile_id`) produces one output file:
+- `{real_profile_id_with_underscores}_fixreal{n_makeup}.csv`
+- Example: `iPhone 16` → `iPhone_16_fixreal5000.csv`
+
+With `--output experiments/experiment_1/`, outputs are written to:
+- `experiments/experiment_1/`

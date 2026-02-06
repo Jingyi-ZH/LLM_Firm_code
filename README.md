@@ -272,7 +272,7 @@ Output behavior:
 If `--output` is omitted, outputs go under `output/` with default filenames.
 
 If `--output` **looks like a folder path** (e.g. ends with `/`, exists as a directory, or has no extension), outputs are written under that folder:
-- Relative paths are interpreted under `output/` (e.g., `--output batch_outputs/` → `output/batch_outputs/`).
+- Relative paths are interpreted under the project root (e.g., `--output experiments/experiment_1/` → `experiments/experiment_1/`).
 - Absolute paths are used as-is.
 
 If `--output` looks like a filename, it is used as the exact output file name (single-output modes only).

@@ -64,13 +64,13 @@ def _resolve_output_dir(output_arg: str) -> Path:
     """Resolve an output directory path.
 
     - Absolute paths are used as-is.
-    - Relative paths are interpreted under the configured output/ directory.
+    - Relative paths are interpreted under the project root.
     """
     p = Path(output_arg)
     if p.is_absolute():
         out_dir = p
     else:
-        out_dir = get_config().get_path("output_dir") / p
+        out_dir = _project_root / p
     out_dir.mkdir(parents=True, exist_ok=True)
     return out_dir
 
