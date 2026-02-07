@@ -14,7 +14,7 @@ from typing import Optional, List, Dict, Any
 import logging
 
 import pandas as pd
-from openai import OpenAI
+from openai import OpenAI, PermissionDeniedError, AuthenticationError
 import numpy as np
 
 import sys
@@ -198,26 +198,52 @@ class PairwiseCollector:
             Model response text
         """
         effort = reasoning_effort or self.reasoning_effort
-        if self.logprobs_enabled:
-            response = self.client.responses.create(
-                model=self.logprobs_model,
-                input=prompt,
-                temperature=self.logprobs_temperature,
-                max_output_tokens=self.logprobs_max_output_tokens,
-                top_logprobs=self.logprobs_top_logprobs,
-                include=self.logprobs_include,
-            )
-            text = response.output_text
-            prob_chosen, prob_nochosen = self._extract_logprobs(response, text)
-            return text, prob_chosen, prob_nochosen
+        attempted_model = self.logprobs_model if self.logprobs_enabled else self.model
+        try:
+            if self.logprobs_enabled:
+                response = self.client.responses.create(
+                    model=self.logprobs_model,
+                    input=prompt,
+                    temperature=self.logprobs_temperature,
+                    max_output_tokens=self.logprobs_max_output_tokens,
+                    top_logprobs=self.logprobs_top_logprobs,
+                    include=self.logprobs_include,
+                )
+                text = response.output_text
+                prob_chosen, prob_nochosen = self._extract_logprobs(response, text)
+                return text, prob_chosen, prob_nochosen
 
-        response = self.client.responses.create(
-            model=self.model,
-            input=prompt,
-            temperature=self.temperature,
-            reasoning={"effort": effort},
-        )
-        return response.output_text, None, None
+            response = self.client.responses.create(
+                model=self.model,
+                input=prompt,
+                temperature=self.temperature,
+                reasoning={"effort": effort},
+            )
+            return response.output_text, None, None
+        except PermissionDeniedError as err:
+            # Avoid dumping prompt contents; provide actionable config hints instead.
+            body = getattr(err, "body", None)
+            detail = None
+            if isinstance(body, dict):
+                detail = (body.get("error") or {}).get("message")
+            raise RuntimeError(
+                "OpenAI API returned 403 PermissionDenied.\n"
+                f"  attempted_model: {attempted_model}\n"
+                f"  logprobs_enabled: {self.logprobs_enabled}\n"
+                "Common causes:\n"
+                "- Your API key / project does not have access to this model.\n"
+                "- The model is disabled by org/project policy.\n"
+                "Fix:\n"
+                "- If running with --logprobs on, change config/config.yaml → openai.logprobs.model.\n"
+                "- Otherwise change config/config.yaml → openai.model.\n"
+                + (f"\nProvider message: {detail}" if detail else "")
+            ) from err
+        except AuthenticationError as err:
+            raise RuntimeError(
+                "OpenAI API authentication failed.\n"
+                "Check that your API key environment variable is set and points to the correct key.\n"
+                f"  config openai.api_key_env_var: {self.cfg.get('openai', 'api_key_env_var')}"
+            ) from err
 
     def _get_prompt_pair(
         self,
