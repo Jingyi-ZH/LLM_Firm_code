@@ -283,6 +283,12 @@ Fixreal sampling reuses a deterministic cached id list:
 - When `n_makeup=5000`, the collector writes/reads `data/sample5000_profile_ids.npy`.
 - If the file exists, it is reused (no re-sampling), keeping comparisons consistent across runs.
 
+### Resuming interrupted fixreal runs
+
+Fixreal supports resuming from a partial output CSV:
+- If the output file already exists (e.g., `{real_profile_id}_fixreal5000.csv`), the collector reads existing rows, detects completed `pair_id` values, and **skips them**.
+- Re-run the same command to continue until all `pair_id` values are completed.
+
 ### Logprobs vs reasoning effort
 
 When `--logprobs on`, the collector uses a separate “logprobs model” config and does **not** pass `reasoning_effort` to the API call (so `--reasoning-effort` is effectively ignored for those calls).

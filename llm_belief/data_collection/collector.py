@@ -471,6 +471,30 @@ class PairwiseCollector:
         cols = self._get_output_columns()
         file_exists = csv_path.is_file()
 
+        existing_pair_ids: set[int] = set()
+        if file_exists and csv_path.stat().st_size > 0:
+            try:
+                with open(csv_path, mode="r", newline="", encoding="utf-8") as rf:
+                    reader = csv.DictReader(rf)
+                    for row in reader:
+                        raw = row.get("pair_id")
+                        if raw is None:
+                            continue
+                        try:
+                            pid = int(raw)
+                        except (TypeError, ValueError):
+                            continue
+                        if 0 <= pid < len(makeup_profiles):
+                            existing_pair_ids.add(pid)
+            except OSError:
+                existing_pair_ids = set()
+        if existing_pair_ids:
+            logger.info(
+                "Resuming %s: found %s existing rows; will skip those pair_id values.",
+                csv_path.name,
+                len(existing_pair_ids),
+            )
+
         # Main loop
         start_time = datetime.now()
         last_call_time = start_time
@@ -478,10 +502,13 @@ class PairwiseCollector:
 
         with open(csv_path, mode="a", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=cols)
-            if not file_exists:
+            if (not file_exists) or csv_path.stat().st_size == 0:
                 writer.writeheader()
 
             for pair_id, makeup_profile in enumerate(makeup_profiles):
+                if pair_id in existing_pair_ids:
+                    continue
+
                 makeup_profile_id = makeup_profile.get("profile_id")
                 makeup_prompt = {
                     k: v for k, v in makeup_profile.items() if k != "profile_id"
