@@ -132,3 +132,4 @@ config.git.bak
 /analysis/
 checklist.md
 /legacy/
+!experiments/sanity_check_summary.xlsx
