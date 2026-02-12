@@ -75,17 +75,18 @@ def _resolve_output_dir(output_arg: str) -> Path:
     return out_dir
 
 
-def _load_fixreal_real_profiles_csv(
-    real_profile_arg: str,
+def _load_profiles_csv(
+    csv_arg: str,
+    arg_name: str,
 ) -> Optional[List[Tuple[str, Dict[str, Any]]]]:
-    """If real_profile_arg points to a CSV file, load real profiles from it.
+    """If a CLI arg points to a CSV file, load profile rows from it.
 
     CSV requirements:
       - Column: real_profile_id
       - All attributes present as columns (either config keys like 'battery_life'
         or their config display names like 'battery life (in hours of video playback)').
     """
-    path_arg = Path(real_profile_arg)
+    path_arg = Path(csv_arg)
     if path_arg.suffix.lower() != ".csv":
         return None
 
@@ -100,11 +101,11 @@ def _load_fixreal_real_profiles_csv(
             path = root_path
         else:
             raise FileNotFoundError(
-                f"--real-profile looks like a CSV path but was not found: {path_arg}"
+                f"{arg_name} looks like a CSV path but was not found: {path_arg}"
             )
 
     if not path.is_file():
-        raise FileNotFoundError(f"Real profile CSV not found: {path}")
+        raise FileNotFoundError(f"CSV not found for {arg_name}: {path}")
 
     df = pd.read_csv(path)
     if "real_profile_id" not in df.columns:
@@ -162,6 +163,13 @@ def _load_fixreal_real_profiles_csv(
         profiles.append((real_profile_id, profile))
 
     return profiles
+
+
+def _load_fixreal_real_profiles_csv(
+    real_profile_arg: str,
+) -> Optional[List[Tuple[str, Dict[str, Any]]]]:
+    """Backward-compatible wrapper for loading fixreal real-profile CSVs."""
+    return _load_profiles_csv(real_profile_arg, arg_name="--real-profile")
 
 
 def main():
@@ -229,6 +237,14 @@ Examples:
         "--n-makeup",
         type=int,
         help="Number of makeup profiles for fixreal experiment",
+    )
+    parser.add_argument(
+        "--alternative-set",
+        type=str,
+        help=(
+            "CSV path for fixed alternatives in fixreal mode. "
+            "Uses the same CSV schema as fixreal batch real-profile CSV input."
+        ),
     )
     parser.add_argument(
         "--n-top",
@@ -336,6 +352,10 @@ Examples:
             parser.error("--real-profile is required for rag experiment")
     if args.experiment == "context" and not args.context:
         parser.error("--context is required for context experiment")
+    if args.alternative_set and args.experiment != "fixreal":
+        parser.error("--alternative-set is only supported for fixreal experiment")
+    if args.experiment == "fixreal" and args.alternative_set and args.n_makeup is not None:
+        parser.error("--n-makeup cannot be used together with --alternative-set")
 
     # Run experiment
     if args.experiment == "basic":
@@ -389,14 +409,17 @@ Examples:
             output_file=args.output,
         )
     elif args.experiment == "fixreal":
-        collector = PairwiseCollector(
-            api_key_env_var=args.api_key_env,
-            logprobs=args.logprobs,
-        )
         try:
             csv_profiles = _load_fixreal_real_profiles_csv(args.real_profile)
+            alternative_profiles = (
+                _load_profiles_csv(args.alternative_set, arg_name="--alternative-set")
+                if args.alternative_set
+                else None
+            )
         except (FileNotFoundError, ValueError, TypeError) as exc:
             parser.error(str(exc))
+        if args.alternative_set and alternative_profiles is None:
+            parser.error("--alternative-set must be a .csv path")
 
         output_dir = None
         output_file = args.output
@@ -406,6 +429,74 @@ Examples:
 
         cfg = get_config()
         resolved_n_makeup = args.n_makeup or cfg.get("collection", "default_n_makeup", default=5000)
+        alt_count = len(alternative_profiles) if alternative_profiles is not None else None
+        if args.api_key_envs:
+            env_vars = [e.strip() for e in args.api_key_envs.split(",") if e.strip()]
+            if not env_vars:
+                parser.error("--api-key-envs is empty after parsing")
+            if csv_profiles is None:
+                parser.error(
+                    "--api-key-envs for fixreal requires --real-profile to be a CSV path "
+                    "(so tasks can be sharded by real-profile)."
+                )
+            if not csv_profiles:
+                parser.error("No real profiles found in --real-profile CSV.")
+            if output_file:
+                parser.error(
+                    "--output cannot be used as a filename when using fixreal CSV batch. "
+                    "Use a folder path to write outputs under that folder."
+                )
+
+            def _run_fixreal_shard(
+                env_var: str,
+                shard_profiles: List[Tuple[str, Dict[str, Any]]],
+            ) -> List[Path]:
+                shard_collector = PairwiseCollector(
+                    api_key_env_var=env_var,
+                    logprobs=args.logprobs,
+                )
+                shard_outputs: List[Path] = []
+                for rid, profile in shard_profiles:
+                    safe_id = rid.replace(" ", "_")
+                    row_output_file = None
+                    if output_dir is not None:
+                        row_output_file = (
+                            str(output_dir / f"{safe_id}_fixreal_altset{alt_count}.csv")
+                            if alternative_profiles is not None
+                            else str(output_dir / f"{safe_id}_fixreal{resolved_n_makeup}.csv")
+                        )
+                    out = shard_collector.collect_fixreal(
+                        real_profile_id=rid,
+                        n_makeup=args.n_makeup,
+                        reasoning_effort=args.reasoning_effort,
+                        output_file=row_output_file,
+                        real_profile=profile,
+                        alternative_profiles=alternative_profiles,
+                    )
+                    shard_outputs.append(out)
+                return shard_outputs
+
+            total = len(csv_profiles)
+            chunk = (total + len(env_vars) - 1) // len(env_vars)
+            futures = []
+            with ThreadPoolExecutor(max_workers=len(env_vars)) as executor:
+                for i, env_var in enumerate(env_vars):
+                    sub_start = i * chunk
+                    sub_end = min((i + 1) * chunk, total)
+                    shard = csv_profiles[sub_start:sub_end]
+                    if not shard:
+                        continue
+                    futures.append(executor.submit(_run_fixreal_shard, env_var, shard))
+                for future in as_completed(futures):
+                    output_paths = future.result()
+                    for output_path in output_paths:
+                        print(f"\nOutput saved to: {output_path}")
+            return
+
+        collector = PairwiseCollector(
+            api_key_env_var=args.api_key_env,
+            logprobs=args.logprobs,
+        )
         if csv_profiles is not None:
             if output_file:
                 parser.error(
@@ -416,13 +507,18 @@ Examples:
                 safe_id = rid.replace(" ", "_")
                 row_output_file = None
                 if output_dir is not None:
-                    row_output_file = str(output_dir / f"{safe_id}_fixreal{resolved_n_makeup}.csv")
+                    row_output_file = (
+                        str(output_dir / f"{safe_id}_fixreal_altset{alt_count}.csv")
+                        if alternative_profiles is not None
+                        else str(output_dir / f"{safe_id}_fixreal{resolved_n_makeup}.csv")
+                    )
                 output_path = collector.collect_fixreal(
                     real_profile_id=rid,
                     n_makeup=args.n_makeup,
                     reasoning_effort=args.reasoning_effort,
                     output_file=row_output_file,
                     real_profile=profile,
+                    alternative_profiles=alternative_profiles,
                 )
                 print(f"\nOutput saved to: {output_path}")
             return
@@ -432,10 +528,13 @@ Examples:
             n_makeup=args.n_makeup,
             reasoning_effort=args.reasoning_effort,
             output_file=(
-                str(output_dir / f"{args.real_profile.replace(' ', '_')}_fixreal{resolved_n_makeup}.csv")
+                str(output_dir / f"{args.real_profile.replace(' ', '_')}_fixreal_altset{alt_count}.csv")
+                if (output_dir is not None and alternative_profiles is not None)
+                else str(output_dir / f"{args.real_profile.replace(' ', '_')}_fixreal{resolved_n_makeup}.csv")
                 if output_dir is not None
                 else output_file
             ),
+            alternative_profiles=alternative_profiles,
         )
     elif args.experiment == "top":
         collector = PairwiseCollector(

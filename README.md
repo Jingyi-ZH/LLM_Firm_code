@@ -231,10 +231,11 @@ Entry points:
 | `--real-profile` | Yes* | all except `basic` | **Usually**: a real profile id from `config/config.yaml` → `real_profiles`. **Special (fixreal only)**: you may pass a `.csv` path to run fixreal once per row (see below). |
 | `--context` | Yes* | `context` | Context text file path (relative to project `data/` or absolute). |
 | `--n-makeup` | Optional | `fixreal`, `rag`, `rag-faiss` | Number of sampled makeup profiles. Default: `config/config.yaml` → `collection.default_n_makeup` (currently 5000). |
+| `--alternative-set` | Optional | `fixreal` | CSV path for fixed alternatives. Uses the same CSV schema as fixreal batch CSV (`real_profile_id` + all attributes). Cannot be used with `--n-makeup`. |
 | `--n-top` | Optional | `top` | Number of top-scored profiles to compare against. |
 | `--output` | Optional | most modes | Output **filename** or **folder** (see output rules below). |
 | `--api-key-env` | Optional | collector modes | Env var name holding the API key (defaults to config `openai.api_key_env_var`). |
-| `--api-key-envs` | Optional | `basic` | Comma-separated API key env vars; splits `[start,end)` into chunks and runs in parallel. |
+| `--api-key-envs` | Optional | `basic`, `fixreal` | Comma-separated API key env vars for parallel runs. `basic`: splits `[start,end)`. `fixreal`: shards CSV batch rows by `real_profile_id`. |
 | `--reasoning-effort` | Optional | collector modes | Overrides config `openai.reasoning_effort` (note: ignored when `--logprobs on`; see below). |
 | `--logprobs` | Optional | collector modes | `on` or `off`; overrides config `openai.logprobs.enabled`. Adds `prob_chosen` / `prob_nochosen` columns. |
 | `--sample-ids-file` | Optional | `context` | NPY filename under `data/` storing sampled makeup profile ids. Default: `sample5k_profile_ids.npy`. |
@@ -252,6 +253,7 @@ Entry points:
 Notes:
 - `Yes*` means “required only for that experiment mode”.
 - For `rag-faiss`, `--rag-faiss`/`--rag-meta` are required via flags or env vars.
+- For `fixreal`, `--api-key-envs` requires `--real-profile` to be a CSV path (batch mode).
 
 ### Fixreal: `--real-profile` can be a CSV path (batch mode)
 
@@ -266,6 +268,23 @@ CSV requirements:
 Output behavior:
 - Writes one file per row as `{real_profile_id_with_underscores}_fixreal{n_makeup}.csv`.
 - If `--output` is provided in batch mode, it must be a **folder** (not a filename).
+
+### Fixreal: `--alternative-set` uses a fixed alternatives CSV
+
+For `--experiment fixreal`, you may set `--alternative-set` to a CSV file. The collector compares each real profile against rows from this CSV instead of sampling from generated makeup profiles.
+
+CSV requirements:
+- Same schema as fixreal batch CSV for `--real-profile`:
+  - Must contain `real_profile_id` (used as alternative profile id)
+  - Must contain all attributes as columns (keys or display names)
+
+Rules:
+- `--alternative-set` is only supported in `fixreal`.
+- `--alternative-set` and `--n-makeup` are mutually exclusive.
+
+Default output naming:
+- Single real profile: `{real_profile_id_with_underscores}_fixreal_altset{num_alternatives}.csv`
+- Batch real profiles (`--real-profile` is CSV): one file per row with the same suffix.
 
 ### Output rules (`--output`)
 
@@ -315,6 +334,19 @@ Fixreal (CSV batch, write into a folder):
 ```bash
 llm-collect --experiment fixreal --real-profile data/custom_real_profiles.csv \
   --n-makeup 5000 --output batch_outputs/
+```
+
+Fixreal batch (parallel by real-profile with multiple API keys):
+```bash
+llm-collect --experiment fixreal --real-profile data/custom_real_profiles.csv \
+  --n-makeup 5000 --api-key-envs OPENAI_KEY_1,OPENAI_KEY_2,OPENAI_KEY_3 \
+  --output batch_outputs/
+```
+
+Fixreal (fixed alternatives from CSV):
+```bash
+llm-collect --experiment fixreal --real-profile "iPhone 16 Pro" \
+  --alternative-set experiments/alternatives/design100.csv
 ```
 
 Top:

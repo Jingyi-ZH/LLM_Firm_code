@@ -10,7 +10,7 @@ import os
 import random
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 import logging
 
 import pandas as pd
@@ -405,6 +405,7 @@ class PairwiseCollector:
         reasoning_effort: Optional[str] = None,
         output_file: Optional[str] = None,
         real_profile: Optional[Dict[str, Any]] = None,
+        alternative_profiles: Optional[List[Tuple[str, Dict[str, Any]]]] = None,
     ) -> Path:
         """Run real vs. makeup profile comparison experiment.
 
@@ -416,20 +417,18 @@ class PairwiseCollector:
             n_makeup: Number of makeup profiles to compare. Defaults to config value.
             reasoning_effort: Optional reasoning effort override
             output_file: Optional output filename
+            alternative_profiles: Optional fixed alternatives as a list of
+                (profile_id, config-keyed-attributes) tuples. When provided,
+                `n_makeup` sampling is skipped and alternatives are taken from
+                this list directly.
 
         Returns:
             Path to output CSV file
         """
-        if n_makeup is None:
-            n_makeup = self.cfg.get('collection', 'default_n_makeup', default=5000)
-        sample_limit = self.cfg.get('collection', 'fixreal_sample_limit', default=20000)
-        seed = self.cfg.get('project', 'random_seed', default=2025)
-
         # Setup logging
         safe_id = real_profile_id.replace(" ", "_")
         logger = get_experiment_logger("fixreal", safe_id)
         self._log_run_config(logger)
-        logger.info(f"Real profile: {real_profile_id}, n_makeup: {n_makeup}")
 
         # Load real profiles from config
         real_profile = self._get_real_profile_formatted(
@@ -437,35 +436,61 @@ class PairwiseCollector:
             real_profile=real_profile,
         )
 
-        # Load generated profiles for comparison
-        profiles_file = self.cfg.get('collection', 'profiles_file')
-        scored_df = pd.read_csv(get_data_path(profiles_file))
-        sample_ids_file = f"sample{n_makeup}_profile_ids.npy"
-        sample_ids = resample_profile_ids(
-            scored_df,
-            n_makeup=n_makeup,
-            sample_limit=sample_limit,
-            seed=seed,
-            output_file=sample_ids_file,
-            use_existing=True,
-        )
+        if alternative_profiles is not None:
+            if n_makeup is not None:
+                raise ValueError("n_makeup cannot be used when alternative_profiles is provided.")
+            makeup_profiles: List[Dict[str, Any]] = []
+            for alt_id, alt_profile in alternative_profiles:
+                alt_formatted = self._get_real_profile_formatted(
+                    str(alt_id),
+                    real_profile=alt_profile,
+                )
+                alt_formatted["profile_id"] = str(alt_id)
+                makeup_profiles.append(alt_formatted)
+            logger.info(
+                "Real profile: %s, fixed alternatives from CSV: %s",
+                real_profile_id,
+                len(makeup_profiles),
+            )
+        else:
+            if n_makeup is None:
+                n_makeup = self.cfg.get('collection', 'default_n_makeup', default=5000)
+            sample_limit = self.cfg.get('collection', 'fixreal_sample_limit', default=20000)
+            seed = self.cfg.get('project', 'random_seed', default=2025)
+            logger.info(f"Real profile: {real_profile_id}, n_makeup: {n_makeup}")
 
-        scoped_df = scored_df.iloc[: min(sample_limit, len(scored_df))]
-        try:
-            makeup_df = scoped_df.set_index("profile_id").loc[sample_ids].reset_index()
-        except KeyError as exc:
-            raise ValueError(
-                "Sampled profile ids not found in scored profiles."
-            ) from exc
+            # Load generated profiles for comparison
+            profiles_file = self.cfg.get('collection', 'profiles_file')
+            scored_df = pd.read_csv(get_data_path(profiles_file))
+            sample_ids_file = f"sample{n_makeup}_profile_ids.npy"
+            sample_ids = resample_profile_ids(
+                scored_df,
+                n_makeup=n_makeup,
+                sample_limit=sample_limit,
+                seed=seed,
+                output_file=sample_ids_file,
+                use_existing=True,
+            )
 
-        base_cols = list(scored_df.columns[:10]) + ["profile_id"]
-        base_cols = [c for c in base_cols if c in makeup_df.columns]
-        makeup_df = rearrange_dataframe(makeup_df[base_cols])
-        makeup_profiles = makeup_df.to_dict(orient="records")
+            scoped_df = scored_df.iloc[: min(sample_limit, len(scored_df))]
+            try:
+                makeup_df = scoped_df.set_index("profile_id").loc[sample_ids].reset_index()
+            except KeyError as exc:
+                raise ValueError(
+                    "Sampled profile ids not found in scored profiles."
+                ) from exc
+
+            base_cols = list(scored_df.columns[:10]) + ["profile_id"]
+            base_cols = [c for c in base_cols if c in makeup_df.columns]
+            makeup_df = rearrange_dataframe(makeup_df[base_cols])
+            makeup_profiles = makeup_df.to_dict(orient="records")
 
         # Setup output
         if output_file is None:
-            output_file = f"{safe_id}_fixreal{n_makeup}.csv"
+            if alternative_profiles is not None:
+                output_file = f"{safe_id}_fixreal_altset{len(makeup_profiles)}.csv"
+            else:
+                output_file = f"{safe_id}_fixreal{n_makeup}.csv"
         csv_path = get_output_path(output_file)
 
         cols = self._get_output_columns()

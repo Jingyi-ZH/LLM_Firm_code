@@ -88,3 +88,26 @@ This is completely misaligned with the official cutoff (June 2024) and indicates
 
 See `sanity_check_summary.xlsx` for the full record of all sanity check results.
 
+## Experiment 2 - Position real profiles 
+### Setup
+- 108 profiles rank over 108 profiles (`representation108`); source: combine
+  `experiments/alternatives/design100.csv` (see [Section 2](#2-the-100-representative-profiles-algdesign-criterion--i)) and
+  `experiments/alternatives/real_profiles.csv`
+- GPT-5-nano, `temp=1`, reasoning = default (medium)
+
+### Result
+Except for iPhone 16 Pro Max, every iPhone 16 series real model only loses to other iPhone 16 series real model.
+- 3D figure: `experiments/experiment2_3D.html`
+
+| rank | real_profile_id    | wins/108 | win_rate |
+|---:|---|---:|---:|
+| 1  | iPhone 16 Plus     | 107 | 0.990741 |
+| 2  | iPhone 16 Pro      | 106 | 0.981481 |
+| 3  | iPhone 16 Pro Max  | 106 | 0.981481 |
+| 4  | iPhone 16          | 105 | 0.972222 |
+| 6  | iPhone 17          | 101 | 0.935185 |
+| 15 | iPhone 17 Pro      | 89  | 0.824074 |
+| 27 | iPhone 17 Pro Max  | 80  | 0.740741 |
+| 74 | iPhone 17 Air      | 36  | 0.333333 |
+
+<img src="experiment2_2D.png" alt="experiment2_2D" width="620" />
