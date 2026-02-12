@@ -110,4 +110,4 @@ Except for iPhone 16 Pro Max, every iPhone 16 series real model only loses to ot
 | 27 | iPhone 17 Pro Max  | 80  | 0.740741 |
 | 74 | iPhone 17 Air      | 36  | 0.333333 |
 
-<img src="experiment2_2D.png" alt="experiment2_2D" width="620" />
+<img src="experiment2_2D.png" alt="experiment2_2D" width="800" />
