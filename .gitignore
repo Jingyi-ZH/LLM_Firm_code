@@ -133,3 +133,6 @@ config.git.bak
 checklist.md
 /legacy/
 !experiments/**
+
+# Keep macOS metadata ignored inside experiments even after unignore
+experiments/**/.DS_Store
