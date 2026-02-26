@@ -1,0 +1,82 @@
+app:
+  id: "nvidia5090"
+  entity: "gpu"
+
+prompting:
+  default_date: "2024-10-01"
+  user_template: |
+    Please consider two GPU alternatives described by a set of attributes:
+    {l0}: {p0}
+    {l1}: {p1}
+
+    Return exactly one label: '{l0}' or '{l1}'. Output nothing else.
+  system_texts:
+    prompt_0: "You will be provided with two GPU alternatives. Decide which one is more likely to match the expected specification profile of NVIDIA's GeForce RTX 5090, anticipated to launch within 6 months."
+    prompt_1: "Two GPU profiles will be shown. Select the one more plausible for NVIDIA's GeForce RTX 5090, which is expected to launch within the next 6 months."
+    prompt_2: "Choose the GPU configuration that better corresponds to NVIDIA's GeForce RTX 5090, an unreleased product expected within a 6-month horizon."
+    prompt_3: "Pick the option more consistent with NVIDIA's GeForce RTX 5090, anticipated to launch in the coming 6 months."
+    prompt_4: "Determine which GPU spec is more plausible for NVIDIA's GeForce RTX 5090, expected to debut over the next 6 months."
+    prompt_5: "Select the GPU profile most consistent with NVIDIA's GeForce RTX 5090, which is not yet released and is expected within the next 6 months."
+    prompt_6: "Choose the configuration more realistic for NVIDIA's GeForce RTX 5090, projected for release within approximately 6 months."
+    prompt_7: "Decide which profile more plausibly belongs to NVIDIA's GeForce RTX 5090, expected to launch in roughly the next 6 months."
+    prompt_8: "Select the concept more likely for NVIDIA's GeForce RTX 5090, expected to be released within a 6-month timeframe."
+    prompt_9: "Decide which set is more likely to be represented in NVIDIA's GeForce RTX 5090, expected to arrive within the next 6 months."
+
+neutral_criteria_texts:
+  prompt_0: "Base your assessment on technical feasibility, product segmentation, power/thermal constraints, and historical GPU generation trends."
+  prompt_1: "Base your assessment on engineering feasibility, product-tier positioning, power and thermal limits, and historical GPU generation patterns."
+  prompt_2: "Base your assessment on what is technically plausible, how flagship GPUs are typically segmented, realistic power/thermal envelopes, and prior-generation trends."
+  prompt_3: "Base your assessment on architectural and manufacturing feasibility, expected flagship segmentation, power/thermals, and historical GPU roadmap trends."
+  prompt_4: "Base your assessment on feasibility and constraints (power, thermals), expected market/portfolio positioning, and patterns observed across past GPU generations."
+  prompt_5: "Base your assessment on practical feasibility, NVIDIA-style product segmentation, plausible power/thermal budgets, and cross-generation GPU trends."
+  prompt_6: "Base your assessment on what is realistic under power and thermal constraints, consistent with flagship segmentation, and aligned with historical GPU generation trajectories."
+  prompt_7: "Base your assessment on technical plausibility, segmentation logic for a flagship GPU, power/thermal constraints, and lessons from historical GPU generation trends."
+  prompt_8: "Base your assessment on feasibility (including power/thermal considerations), product positioning and segmentation, and historical trends across GPU generations."
+  prompt_9: "Base your assessment on technical feasibility, realistic power/thermal envelopes, expected product segmentation, and historical GPU generation trendlines."
+
+attributes:
+  msrp_usd:
+    name: "MSRP (USD)"
+    prompt_name: "MSRP"
+    values: [999, 1499, 1999, 2499, 2999]
+    format: {prefix: "$", cast: "int"}
+
+  vram_gb:
+    name: "VRAM (GB)"
+    prompt_name: "VRAM"
+    values: [16, 24, 32, 48]
+    format: {suffix: " GB", cast: "int"}
+
+  bandwidth_gbps:
+    name: "Bandwidth (GB/s)"
+    prompt_name: "Bandwidth"
+    values: [600, 1200, 1800, 2400, 3000]
+    format: {suffix: " GB/s", cast: "int"}
+
+  tdp_w:
+    name: "TDP (W)"
+    prompt_name: "TDP"
+    values: [350, 450, 575, 700]
+    format: {suffix: " W", cast: "int"}
+
+  l2_cache_mb:
+    name: "L2 Cache (MB)"
+    prompt_name: "L2 Cache"
+    values: [48, 72, 96, 128]
+    format: {suffix: " MB", cast: "int"}
+
+  fp32_tflops:
+    name: "FP32 performance (TFLOPS)"
+    prompt_name: "FP32 performance"
+    values: [40, 80, 100, 120, 160]
+    format: {suffix: " TFLOPS", cast: "float"}
+
+
+real_profiles:
+  nvidia_rtx_5090:
+    msrp_usd: 1999
+    vram_gb: 32
+    bandwidth_gbps: 1792
+    tdp_w: 575
+    l2_cache_mb: 96
+    fp32_tflops: 104.8

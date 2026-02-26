@@ -49,6 +49,15 @@ cp .env.example .env
 All other configuration options are in `config/config.yaml`.
 Note: `logprobs=on` only works with non-reasoning models.
 
+### Application / Domain Specs (new)
+
+This repo supports swapping the “application” (prompts, attributes, real profiles) while keeping the pipeline/CLI the same.
+
+- Active app is configured in `config/config.yaml` under `app.spec_path` (defaults to iPhone).
+- App specs live in `config/apps/` (e.g., `config/apps/iphone.yaml`).
+- You can override the active spec without editing files by setting:
+  - `LLM_BELIEF_APP_SPEC_PATH=/absolute/or/project/relative/path/to/spec.yaml`
+
 ### 3. Generate Hypothetical Profiles
 
 ```bash
@@ -208,6 +217,7 @@ Real profiles are defined in `config/config.yaml` under `real_profiles`. Prompts
 This project supports the following experiment modes:
 - `basic`: pairwise comparisons between hypothetical profiles.
 - `fixreal`: pairwise comparisons between a *real* profile and sampled hypothetical (“makeup”) profiles.
+- `allcomb`: pairwise comparisons across a provided set of real profiles (N profiles → N(N-1)/2 comparisons).
 - `top`: comparisons between a real profile and the top-scored hypothetical profiles.
 - `context`: fixreal with injected context text (system message).
 - `rag`: fixreal with RAG context via the `RAG_langchain/` pipeline.
@@ -229,6 +239,7 @@ Entry points:
 | `--start` | Yes* | `basic` | Start index (inclusive) of pair range. |
 | `--end` | Yes* | `basic` | End index (exclusive) of pair range. |
 | `--real-profile` | Yes* | all except `basic` | **Usually**: a real profile id from `config/config.yaml` → `real_profiles`. **Special (fixreal only)**: you may pass a `.csv` path to run fixreal once per row (see below). |
+| `--real-profile` | Yes* | `allcomb` | A `.csv` path containing N real profiles; runs all pairwise combinations → N(N-1)/2 comparisons. |
 | `--context` | Yes* | `context` | Context text file path (relative to project `data/` or absolute). |
 | `--n-makeup` | Optional | `fixreal`, `rag`, `rag-faiss` | Number of sampled makeup profiles. Default: `config/config.yaml` → `collection.default_n_makeup` (currently 5000). |
 | `--alternative-set` | Optional | `fixreal` | CSV path for fixed alternatives. Uses the same CSV schema as fixreal batch CSV (`real_profile_id` + all attributes). Cannot be used with `--n-makeup`. |
@@ -369,6 +380,17 @@ RAG (FAISS):
 llm-collect --experiment rag-faiss --real-profile "iPhone 16 Pro" \
   --rag-faiss path/to/index.faiss --rag-meta path/to/records.jsonl
 ```
+
+All combinations across provided real profiles (CSV):
+```bash
+llm-collect --experiment allcomb --real-profile data/real_profiles.csv --output experiments/allcomb_runs/
+```
+
+Allcomb output behavior:
+- `--real-profile` must be a `.csv` path.
+- `--output` must be a folder path (not a filename).
+- Output filename is auto-generated as `{input_csv_stem}_allcomb.csv` under the output folder.
+- Resume is supported: if the output file already exists, completed pairs are detected from file content and skipped; remaining pairs are appended to the same file.
 
 ## Models
 

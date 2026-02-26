@@ -593,6 +593,208 @@ class PairwiseCollector:
 
         return csv_path
 
+    def collect_allcomb(
+        self,
+        real_profiles: List[Tuple[str, Dict[str, Any]]],
+        reasoning_effort: Optional[str] = None,
+        output_file: Optional[str] = None,
+    ) -> Path:
+        """Run all-combinations (all-pairs) comparisons across a provided set of real profiles.
+
+        This mode compares N provided real profiles in a round-robin fashion,
+        producing N*(N-1)/2 pairwise judgments.
+
+        Args:
+            real_profiles: List of (real_profile_id, profile_dict) where profile_dict
+                is keyed by attribute keys (as defined in the active app spec).
+            reasoning_effort: Optional reasoning effort override.
+            output_file: Optional output filename/path.
+                - If relative, written under config paths.output_dir.
+                - If absolute, written to that exact location.
+
+        Returns:
+            Path to output CSV file.
+        """
+        if not real_profiles or len(real_profiles) < 2:
+            raise ValueError("collect_allcomb requires at least 2 real profiles.")
+
+        logger = get_experiment_logger("allcomb", f"n{len(real_profiles)}")
+        self._log_run_config(logger)
+
+        # Pre-format for prompt injection (same display formatting as makeup profiles)
+        ids: List[str] = []
+        formatted_profiles: List[Dict[str, Any]] = []
+        for rid, profile in real_profiles:
+            ids.append(str(rid))
+            formatted_profiles.append(self._get_real_profile_formatted(rid, real_profile=profile))
+
+        # Output path
+        if output_file is None:
+            output_file = f"allcomb_{len(real_profiles)}.csv"
+        csv_path = get_output_path(output_file)
+        total_pairs = len(real_profiles) * (len(real_profiles) - 1) // 2
+
+        cols = [
+            "model",
+            "temperature",
+            "pair_id",
+            "pair",
+            "prompt_variant",
+            "prompt",
+            "prompt_response",
+            "chosen_profile",
+            "chosen_profile_id",
+            "nonchosen_profile_id",
+        ]
+        if self.logprobs_enabled:
+            cols += ["prob_chosen", "prob_nochosen"]
+
+        file_exists = csv_path.is_file()
+        completed_pair_ids: set[int] = set()
+
+        def _pair_key(a: str, b: str) -> tuple[str, str]:
+            return tuple(sorted((str(a), str(b))))
+
+        pair_key_to_pair_id: Dict[tuple[str, str], int] = {}
+        pair_sequence: List[Tuple[int, int, int]] = []
+        pair_id_cursor = 0
+        for i in range(len(real_profiles)):
+            for j in range(i + 1, len(real_profiles)):
+                pair_sequence.append((pair_id_cursor, i, j))
+                pair_key_to_pair_id[_pair_key(ids[i], ids[j])] = pair_id_cursor
+                pair_id_cursor += 1
+
+        if file_exists:
+            try:
+                header_df = pd.read_csv(csv_path, nrows=0)
+                existing_cols = set(header_df.columns)
+                usecols: List[str] = []
+                if "pair_id" in existing_cols:
+                    usecols.append("pair_id")
+                if "chosen_profile_id" in existing_cols and "nonchosen_profile_id" in existing_cols:
+                    usecols += ["chosen_profile_id", "nonchosen_profile_id"]
+
+                if usecols:
+                    existing = pd.read_csv(csv_path, usecols=usecols)
+                    if "pair_id" in existing.columns:
+                        completed_pair_ids.update(
+                            pd.to_numeric(existing["pair_id"], errors="coerce")
+                            .dropna()
+                            .astype(int)
+                            .tolist()
+                        )
+                    if "chosen_profile_id" in existing.columns and "nonchosen_profile_id" in existing.columns:
+                        for _, row in existing.iterrows():
+                            chosen_id = row.get("chosen_profile_id")
+                            nonchosen_id = row.get("nonchosen_profile_id")
+                            if pd.isna(chosen_id) or pd.isna(nonchosen_id):
+                                continue
+                            mapped_pair_id = pair_key_to_pair_id.get(_pair_key(str(chosen_id), str(nonchosen_id)))
+                            if mapped_pair_id is not None:
+                                completed_pair_ids.add(mapped_pair_id)
+
+                completed_pair_ids = {pid for pid in completed_pair_ids if 0 <= pid < total_pairs}
+                logger.info(
+                    "Resuming allcomb: %s/%s pairs already completed in %s",
+                    len(completed_pair_ids),
+                    total_pairs,
+                    csv_path,
+                )
+            except Exception:
+                # If we can't parse existing output, do not attempt resume.
+                completed_pair_ids = set()
+                logger.warning("Unable to parse existing allcomb output for resume; processing from scratch.")
+
+        # Main loop
+        start_time = datetime.now()
+        last_call_time = start_time
+        logger.info(f"API session start: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        num_variants = int(self.cfg.get("collection", "num_prompt_variants", default=10) or 10)
+        if num_variants <= 0:
+            num_variants = 10
+
+        if len(completed_pair_ids) >= total_pairs:
+            logger.info("All %s pairs are already completed. Nothing to run.", total_pairs)
+            return csv_path
+
+        with open(csv_path, mode="a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=cols)
+            if not file_exists:
+                writer.writeheader()
+
+            for pair_id, i, j in pair_sequence:
+                if pair_id in completed_pair_ids:
+                    continue
+
+                labels = random_label_only()
+                pair_ids = [ids[i], ids[j]]
+                profiles = {
+                    labels[0]: formatted_profiles[i],
+                    labels[1]: formatted_profiles[j],
+                }
+
+                prompt_variant = pair_id % num_variants
+                prompt_pair, prompt_labels = self._get_prompt_pair(labels, profiles, pair_id)
+                prompt = get_prompt_variant(prompt_variant, prompt_pair, prompt_labels)
+
+                res, prob_chosen, prob_nochosen = self._call_api(
+                    prompt,
+                    reasoning_effort=reasoning_effort,
+                )
+
+                call_time = datetime.now()
+                logger.info(
+                    f"Pair {pair_id}: {round((call_time - last_call_time).total_seconds())}s"
+                )
+                last_call_time = call_time
+
+                chosen_profile = profiles.get(res)
+                chosen_profile_id = None
+                nonchosen_profile_id = None
+                if chosen_profile is not None and res in labels:
+                    chosen_idx = labels.index(res)
+                    chosen_profile_id = pair_ids[chosen_idx]
+                    nonchosen_profile_id = pair_ids[1 - chosen_idx]
+
+                row = {
+                    "model": self.logprobs_model if self.logprobs_enabled else self.model,
+                    "temperature": self.logprobs_temperature if self.logprobs_enabled else self.temperature,
+                    "pair_id": pair_id,
+                    "pair": profiles,
+                    "prompt_variant": prompt_variant,
+                    "prompt": prompt,
+                    "prompt_response": res,
+                    "chosen_profile": chosen_profile,
+                    "chosen_profile_id": chosen_profile_id,
+                    "nonchosen_profile_id": nonchosen_profile_id,
+                }
+                if self.logprobs_enabled:
+                    row["prob_chosen"] = prob_chosen
+                    row["prob_nochosen"] = prob_nochosen
+                writer.writerow(row)
+
+        end_time = datetime.now()
+        duration = round((end_time - start_time).total_seconds())
+        logger.info(f"API session end: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info(f"Total duration: {duration}s")
+        logger.info("All tasks completed successfully.")
+
+        return csv_path
+
+    # Backward-compatible alias (introduced briefly during development)
+    def collect_realpairs(
+        self,
+        real_profiles: List[Tuple[str, Dict[str, Any]]],
+        reasoning_effort: Optional[str] = None,
+        output_file: Optional[str] = None,
+    ) -> Path:
+        return self.collect_allcomb(
+            real_profiles=real_profiles,
+            reasoning_effort=reasoning_effort,
+            output_file=output_file,
+        )
+
     def collect_top(
         self,
         real_profile_id: str,

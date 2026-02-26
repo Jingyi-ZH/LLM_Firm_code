@@ -211,6 +211,7 @@ Examples:
             "context",
             "rag",
             "rag-faiss",
+            "allcomb",
         ],
         required=True,
         help="Type of experiment to run",
@@ -344,7 +345,7 @@ Examples:
     if args.experiment == "basic":
         if args.start is None or args.end is None:
             parser.error("--start and --end are required for basic experiment")
-    elif args.experiment in ["fixreal", "top", "context", "rag-faiss"]:
+    elif args.experiment in ["fixreal", "top", "context", "rag-faiss", "allcomb"]:
         if args.real_profile is None:
             parser.error(f"--real-profile is required for {args.experiment} experiment")
     elif args.experiment == "rag":
@@ -535,6 +536,33 @@ Examples:
                 else output_file
             ),
             alternative_profiles=alternative_profiles,
+        )
+    elif args.experiment == "allcomb":
+        try:
+            csv_profiles = _load_profiles_csv(args.real_profile, arg_name="--real-profile")
+        except (FileNotFoundError, ValueError, TypeError) as exc:
+            parser.error(str(exc))
+        if csv_profiles is None:
+            parser.error("--real-profile must be a .csv path for allcomb experiment")
+        if len(csv_profiles) < 2:
+            parser.error("--real-profile CSV must contain at least 2 rows for allcomb experiment")
+
+        input_name = Path(args.real_profile).stem
+        output_file = f"{input_name}_allcomb.csv"
+        if args.output:
+            if not _is_output_dir_arg(args.output):
+                parser.error("--output for allcomb must be a folder path")
+            out_dir = _resolve_output_dir(args.output)
+            output_file = str(out_dir / output_file)
+
+        collector = PairwiseCollector(
+            api_key_env_var=args.api_key_env,
+            logprobs=args.logprobs,
+        )
+        output_path = collector.collect_allcomb(
+            real_profiles=csv_profiles,
+            reasoning_effort=args.reasoning_effort,
+            output_file=output_file,
         )
     elif args.experiment == "top":
         collector = PairwiseCollector(

@@ -5,6 +5,7 @@ import yaml
 import os
 from functools import lru_cache
 from dotenv import load_dotenv
+from typing import Any, Dict, Optional
 
 
 class Config:
@@ -33,6 +34,13 @@ class Config:
         env_path = self._root / '.env'
         if env_path.exists():
             load_dotenv(env_path)
+
+    def _load_yaml_file(self, path: Path) -> dict:
+        with open(path, "r") as f:
+            data = yaml.safe_load(f) or {}
+        if not isinstance(data, dict):
+            raise ValueError(f"YAML must be a mapping: {path}")
+        return data
 
     @staticmethod
     def _find_config():
@@ -79,6 +87,83 @@ class Config:
                 return default
         return value
 
+    @staticmethod
+    def _deep_merge_dicts(base: dict, override: dict) -> dict:
+        """Deep merge override into base (dicts only), returning a new dict."""
+        if not isinstance(base, dict):
+            base = {}
+        if not isinstance(override, dict):
+            return dict(base)
+        out = dict(base)
+        for k, v in override.items():
+            if k in out and isinstance(out[k], dict) and isinstance(v, dict):
+                out[k] = Config._deep_merge_dicts(out[k], v)
+            else:
+                out[k] = v
+        return out
+
+    def get_app_spec(self) -> dict:
+        """Return the active app spec dict.
+
+        Backward compatible:
+          - If top-level `attributes`/`real_profiles` exist, they are treated as the app spec.
+          - Otherwise, loads a spec YAML referenced by `app.spec_path`.
+        """
+        # Legacy inline app spec (older config.yaml layout)
+        has_inline_app = any(k in (self._data or {}) for k in ("attributes", "real_profiles", "prompting"))
+        app_cfg = self.get("app", default={}) or {}
+        env_spec_path = os.getenv("LLM_BELIEF_APP_SPEC_PATH")
+        spec_path = env_spec_path or app_cfg.get("spec_path") or app_cfg.get("spec") or None
+
+        spec: dict = {}
+        if spec_path:
+            spec_file = (self._root / spec_path).resolve()
+            spec = self._load_yaml_file(spec_file)
+            # allow specs to be nested under `app:` while still carrying siblings
+            if "app" in spec and isinstance(spec.get("app"), dict):
+                # keep the full mapping; callers can read `app` metadata if needed
+                pass
+
+        if has_inline_app:
+            inline = {
+                "attributes": self.get("attributes", default=None),
+                "real_profiles": self.get("real_profiles", default=None),
+                "prompting": self.get("prompting", default=None),
+            }
+            inline = {k: v for k, v in inline.items() if isinstance(v, dict)}
+            spec = self._deep_merge_dicts(spec, inline)
+
+        if not isinstance(spec, dict) or not spec:
+            raise ValueError(
+                "No app spec found. Provide either top-level `attributes`/`real_profiles` "
+                "or set `app.spec_path` in config/config.yaml."
+            )
+        return spec
+
+    def get_prompting(self) -> dict:
+        """Get prompting configuration from the active app spec."""
+        spec = self.get_app_spec()
+        prompting = spec.get("prompting", {})
+        prompting = prompting if isinstance(prompting, dict) else {}
+
+        # Backward/lenient support: allow neutral criteria variants at the top level of the app spec.
+        # Many specs naturally place these alongside `prompting:` rather than nested within.
+        for k in ("neutral_criteria", "neutral_criteria_variants", "neutral_criteria_texts"):
+            if k not in prompting and k in spec:
+                prompting[k] = spec.get(k)
+
+        return prompting
+
+    def get_app_meta(self) -> dict:
+        """Get optional app metadata (id/entity/etc.) from the active app spec."""
+        spec = self.get_app_spec()
+        app_meta = spec.get("app", {})
+        if isinstance(app_meta, dict) and app_meta:
+            return app_meta
+        # fallback to base config app section
+        app_cfg = self.get("app", default={}) or {}
+        return app_cfg if isinstance(app_cfg, dict) else {}
+
     def get_path(self, key: str) -> Path:
         """Get absolute path for a configured directory.
 
@@ -118,20 +203,24 @@ class Config:
         return key
 
     def get_attributes(self) -> dict:
-        """Get iPhone attributes configuration.
+        """Get active app attributes configuration.
 
         Returns:
             Dictionary of attribute configurations.
         """
-        return self.get('attributes', default={})
+        spec = self.get_app_spec()
+        attrs = spec.get("attributes", {})
+        return attrs if isinstance(attrs, dict) else {}
 
     def get_real_profiles(self) -> dict:
-        """Get real iPhone profile configurations.
+        """Get active app real profile configurations.
 
         Returns:
             Dictionary of real iPhone profiles.
         """
-        return self.get('real_profiles', default={})
+        spec = self.get_app_spec()
+        real = spec.get("real_profiles", {})
+        return real if isinstance(real, dict) else {}
 
 
 # Global config instance cache

@@ -1,7 +1,7 @@
-"""iPhone attribute definitions and profile generation utilities.
+"""Attribute definitions and profile generation utilities.
 
 This module provides:
-    - Attribute definitions loaded from config
+    - Attribute definitions loaded from the active app spec
     - Profile generation with jitter
     - Label randomization for pairwise comparisons
 """
@@ -23,7 +23,7 @@ from config import get_config
 
 
 def get_attributes() -> Dict[str, Dict]:
-    """Get iPhone attributes from configuration.
+    """Get active app attributes from configuration.
 
     Returns:
         Dictionary of attribute configurations.
@@ -45,16 +45,48 @@ def get_attribute_values() -> Dict[str, List]:
 
 
 def get_real_profiles() -> Dict[str, Dict]:
-    """Get real iPhone profiles from configuration.
+    """Get real profiles from configuration (active app).
 
     Returns:
-        Dictionary of real iPhone profile specifications.
+        Dictionary of real profile specifications.
     """
     return get_config().get_real_profiles()
 
+def _cast_value(value: Any, cast: str | None) -> Any:
+    if cast is None:
+        return value
+    if value is None:
+        return value
+    if cast == "int":
+        try:
+            return int(value)
+        except Exception:
+            return value
+    if cast == "float":
+        try:
+            return float(value)
+        except Exception:
+            return value
+    return value
+
 
 def format_attribute_value(attr_key: str, value: Any) -> str:
-    """Format an attribute value using config display conventions."""
+    """Format an attribute value using config display conventions.
+
+    If the active app spec provides `attributes.<key>.format`, it is used.
+    Otherwise falls back to the legacy iPhone formatting behavior.
+    """
+    attrs = get_attributes() or {}
+    attr_cfg = attrs.get(attr_key, {}) if isinstance(attrs, dict) else {}
+    fmt = attr_cfg.get("format", {}) if isinstance(attr_cfg, dict) else {}
+    if isinstance(fmt, dict) and fmt:
+        cast = fmt.get("cast")
+        value_cast = _cast_value(value, cast)
+        prefix = fmt.get("prefix", "")
+        suffix = fmt.get("suffix", "")
+        return f"{prefix}{value_cast}{suffix}"
+
+    # Legacy fallback (kept for backward compatibility with older configs)
     unit_map = {
         "battery_life": "hours video playback",
         "screen_size": "inches",
@@ -226,64 +258,46 @@ def generate_all_profiles(seed: int = 42) -> List[Dict[str, Any]]:
 
 
 def rearrange_dataframe(df_input: pd.DataFrame) -> pd.DataFrame:
-    """Rearrange and format a profiles DataFrame for display.
+    """Rearrange and format a profiles DataFrame for display (prompts/logging).
 
-    Converts numeric values to human-readable strings with units.
-
-    Args:
-        df_input: DataFrame with raw profile values
-
-    Returns:
-        Formatted DataFrame
+    Uses the active app spec's attributes:
+      - Renames columns from attribute `name` -> `prompt_name` (if provided),
+        else a best-effort shortened name.
+      - Formats values via `attributes.<key>.format` (prefix/suffix/cast).
     """
     df = df_input.copy()
 
-    # Set integer columns
-    int_columns = [
-        "battery life (in hours of video playback)",
-        "front camera resolution (in MP)",
-        "rear camera main lens resolution (in MP)",
-        "rear camera longest focal length (in x)",
-        "Geekbench multicore score",
-        "RAM",
-        "price",
-    ]
+    attrs = get_attributes() or {}
+    if not isinstance(attrs, dict) or not attrs:
+        return df
 
-    for col in int_columns:
-        if col in df.columns:
-            df[col] = df[col].astype(int)
+    def _shorten_name(name: str) -> str:
+        if not isinstance(name, str):
+            return str(name)
+        # Common pattern: "foo (in unit)" -> "foo"
+        marker = " (in "
+        if marker in name and name.endswith(")"):
+            return name.split(marker, 1)[0]
+        return name
 
-    # Rename columns to shorter names
-    rename_map = {
-        "battery life (in hours of video playback)": "battery life",
-        "screen size (in inches)": "screen size",
-        "thickness (in mm)": "thickness",
-        "front camera resolution (in MP)": "front camera resolution",
-        "rear camera main lens resolution (in MP)": "rear camera main lens resolution",
-        "rear camera longest focal length (in x)": "rear camera longest focal length",
-    }
+    rename_map: Dict[str, str] = {}
+    col_key_map: Dict[str, str] = {}
+    for key, cfg in attrs.items():
+        if not isinstance(cfg, dict):
+            continue
+        raw_name = cfg.get("name", key)
+        prompt_name = cfg.get("prompt_name") or cfg.get("short_name") or _shorten_name(str(raw_name))
+        rename_map[str(raw_name)] = str(prompt_name)
+        col_key_map[str(prompt_name)] = str(key)
+        col_key_map[str(raw_name)] = str(key)
+
     df = df.rename(columns=rename_map)
 
-    # Add units
-    if "battery life" in df.columns:
-        df["battery life"] = df["battery life"].apply(lambda x: f"{x} hours video playback")
-    if "screen size" in df.columns:
-        df["screen size"] = df["screen size"].apply(lambda x: f"{x} inches")
-    if "thickness" in df.columns:
-        df["thickness"] = df["thickness"].apply(lambda x: f"{x} mm")
-    if "front camera resolution" in df.columns:
-        df["front camera resolution"] = df["front camera resolution"].apply(lambda x: f"{x} MP")
-    if "rear camera main lens resolution" in df.columns:
-        df["rear camera main lens resolution"] = df["rear camera main lens resolution"].apply(
-            lambda x: f"{x} MP"
-        )
-    if "rear camera longest focal length" in df.columns:
-        df["rear camera longest focal length"] = df["rear camera longest focal length"].apply(
-            lambda x: f"{x}x"
-        )
-    if "RAM" in df.columns:
-        df["RAM"] = df["RAM"].apply(lambda x: f"{x} GB")
-    if "price" in df.columns:
-        df["price"] = df["price"].apply(lambda x: f"${x}")
+    # Apply formatting for known attribute columns (ignore extra columns like profile_id)
+    for col in list(df.columns):
+        key = col_key_map.get(str(col))
+        if not key:
+            continue
+        df[col] = df[col].apply(lambda x, k=key: format_attribute_value(k, x))
 
     return df
