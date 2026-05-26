@@ -1,0 +1,127 @@
+app:
+  id: "ipadmini7"
+  entity: "tablet"
+
+prompting:
+  default_date: "2024-06-01"
+  user_template: |
+    Please consider two tablet alternatives described by a set of attributes:
+    {l0}: {p0}
+    {l1}: {p1}
+
+    Return exactly one label: '{l0}' or '{l1}'. Output nothing else, no quotes, no punctuation, no spaces, and no line breaks.
+  system_texts:
+    prompt_0: "You will be provided with two tablet alternatives. Decide which one is more likely to match the expected specification profile of Apple's next iPad mini generation, anticipated to launch within 6 months."
+    prompt_1: "Two tablet profiles will be shown. Select the one more plausible for Apple's upcoming iPad mini, which is expected to launch within the next 6 months."
+    prompt_2: "Choose the tablet configuration that better corresponds to Apple's next iPad mini model, an unreleased product expected within a 6-month horizon."
+    prompt_3: "Pick the option more consistent with Apple's next iPad mini, anticipated to launch in the coming 6 months."
+    prompt_4: "Determine which tablet spec is more plausible for Apple's next iPad mini model, expected to debut over the next 6 months."
+    prompt_5: "Select the tablet profile most consistent with Apple's next iPad mini, which is not yet released and is expected within the next 6 months."
+    prompt_6: "Choose the configuration more realistic for Apple's next iPad mini, projected for release within approximately 6 months."
+    prompt_7: "Decide which profile more plausibly belongs to Apple's next iPad mini, expected to launch in roughly the next 6 months."
+    prompt_8: "Select the concept more likely for Apple's next iPad mini model, expected to be released within a 6-month timeframe."
+    prompt_9: "Decide which set is more likely to be represented in Apple's next iPad mini generation, expected to arrive within the next 6 months."
+  neutral_criteria_texts:
+    prompt_0: "Base your assessment on technical feasibility, product segmentation, thermal/power constraints, and historical iPad mini generation trends."
+    prompt_1: "Base your assessment on engineering feasibility, product-tier positioning, realistic constraints, and historical iPad mini generation patterns."
+    prompt_2: "Base your assessment on what is technically plausible, how iPad tiers are typically segmented, realistic constraints, and prior-generation trends."
+    prompt_3: "Base your assessment on architecture/manufacturing feasibility, expected segmentation, and historical iPad roadmap trends."
+    prompt_4: "Base your assessment on feasibility and constraints, expected portfolio positioning, and patterns observed across past iPad generations."
+    prompt_5: "Base your assessment on practical feasibility, Apple-style product segmentation, plausible capability envelopes, and cross-generation iPad trends."
+    prompt_6: "Base your assessment on what is realistic under power and thermal constraints, consistent with product segmentation, and aligned with historical iPad trajectories."
+    prompt_7: "Base your assessment on technical plausibility, segmentation logic, and lessons from historical iPad mini generation trends."
+    prompt_8: "Base your assessment on feasibility considerations, product positioning, segmentation logic, and long-run trends across iPad generations."
+    prompt_9: "Base your assessment on technical feasibility, realistic capability envelopes, expected segmentation, and historical iPad generation trendlines."
+
+attributes:
+  launch_msrp_usd:
+    name: "launch MSRP (USD)"
+    prompt_name: "launch MSRP"
+    values: [399, 499, 599]
+    format:
+      prefix: "$"
+      cast: "int"
+    jitter:
+      dist: "uniform"
+      scale: 15
+      round: 0
+      clip: [399, 599]
+      p_no_jitter: 0.40
+  base_storage_gb:
+    name: "base storage (GB)"
+    prompt_name: "base storage"
+    values: [64, 128, 256]
+    format:
+      suffix: " GB"
+      cast: "int"
+    jitter:
+      enabled: false
+  cpu_cores:
+    name: "CPU cores"
+    prompt_name: "CPU cores"
+    values: [4, 6, 8, 10]
+    format:
+      cast: "int"
+    jitter:
+      enabled: false
+  gpu_cores:
+    name: "GPU cores"
+    prompt_name: "GPU cores"
+    values: [4, 5, 6, 8]
+    format:
+      cast: "int"
+    jitter:
+      enabled: false
+  ram_size_gb:
+    name: "RAM size (GB)"
+    prompt_name: "RAM size"
+    values: [4, 6, 8, 12]
+    format:
+      suffix: " GB"
+      cast: "int"
+    jitter:
+      enabled: false
+  screen_size_inch:
+    name: "screen size (inch)"
+    prompt_name: "screen size"
+    values: [7.9, 8.3, 8.7]
+    format:
+      suffix: " inch"
+      cast: "float"
+    jitter:
+      dist: "normal"
+      scale: 0.1
+      round: 1
+      clip: [7.8, 8.8]
+      p_no_jitter: 0.40
+  bandwidth_gbps:
+    name: "memory bandwidth (GB/s)"
+    prompt_name: "memory bandwidth"
+    values: [80, 120, 160]
+    format:
+      suffix: " GB/s"
+      cast: "int"
+    jitter:
+      dist: "normal"
+      scale: 3
+      round: 0
+      clip: [70, 170]
+      p_no_jitter: 0.40
+
+real_profiles:
+  iPad mini 6:
+    launch_msrp_usd: 499
+    base_storage_gb: 64
+    cpu_cores: 6
+    gpu_cores: 5
+    ram_size_gb: 4
+    screen_size_inch: 8.3
+    bandwidth_gbps: 80
+  iPad mini 7:
+    launch_msrp_usd: 599
+    base_storage_gb: 128
+    cpu_cores: 6
+    gpu_cores: 6
+    ram_size_gb: 8
+    screen_size_inch: 8.3
+    bandwidth_gbps: 120

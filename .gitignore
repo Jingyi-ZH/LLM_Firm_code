@@ -3,6 +3,7 @@
 # =========================
 .DS_Store
 Thumbs.db
+.Rhistory
 *.swp
 *.swo
 *~
@@ -94,9 +95,17 @@ gitcheck.md
 REFACTORING_PLAN.md
 active_learn/
 iPhone17e/
+AppleWatch/
 experiments/
-RAG_langchain/raw_material/archived/
-RAG_langchain/wayback_fetch/wayback_downloads/
+RAG_langchain/
+data/PCA_loading/
+config/apps/applewatch.yaml
+scripts/run_applewatch_new_prompt.py
+scripts/run_rag_pipeline.sh
+scripts/run_analysis.py
+notebooks/auxiliary/tables.ipynb
+notebooks/model_training/probability_pca_attention.ipynb
+notebooks/model_training/probability_tsne_attention.ipynb
 
 # =========================
 # Data / Analysis Results
@@ -104,6 +113,7 @@ RAG_langchain/wayback_fetch/wayback_downloads/
 *.csv
 !iPhone16_baseline/alternatives/
 !iPhone16_baseline/alternatives/**
+!iPhone17/represents104.csv
 *.xlsx
 *.png
 *.jpg
@@ -125,7 +135,6 @@ models/*.pkl
 *.temp
 *.bak
 *.npy
-!data/sample5000_profile_ids.npy
 *.pkl
 *.jsonl
 *.faiss

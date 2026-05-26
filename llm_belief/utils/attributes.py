@@ -111,7 +111,8 @@ def format_profile_for_prompt(profile: Dict[str, Any]) -> Dict[str, str]:
     attrs = get_attributes()
     formatted = {}
     for key, val in profile.items():
-        display_name = attrs.get(key, {}).get("name", key)
+        cfg = attrs.get(key, {}) if isinstance(attrs, dict) else {}
+        display_name = cfg.get("prompt_name") or cfg.get("name") or key
         formatted[display_name] = format_attribute_value(key, val)
     return formatted
 

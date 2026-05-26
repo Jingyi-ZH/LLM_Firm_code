@@ -1,0 +1,52 @@
+Released iPhone 16 lineup key specifications:
+- iPhone 16: battery life 22 hours video playback; screen size 6.1 inches; thickness 7.8 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 2x; ultrawide camera equipped; Geekbench multicore score 8205; RAM 8 GB; price $899.
+- iPhone 16 Plus: battery life 27 hours video playback; screen size 6.7 inches; thickness 7.8 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 2x; ultrawide camera equipped; Geekbench multicore score 8208; RAM 8 GB; price $999.
+- iPhone 16 Pro: battery life 27 hours video playback; screen size 6.3 inches; thickness 8.25 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 5x; ultrawide camera equipped; Geekbench multicore score 8581; RAM 8 GB; price $1099.
+- iPhone 16 Pro Max: battery life 33 hours video playback; screen size 6.9 inches; thickness 8.25 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 5x; ultrawide camera equipped; Geekbench multicore score 8504; RAM 8 GB; price $1199.
+
+Early iPhone 17 Expectations (rumored):
+Overview:
+- The page covers rumors about Apple’s 2025 iPhone 17 lineup, expected to launch in September 2025.
+- Four models are anticipated: iPhone 17, iPhone 17 Pro, iPhone 17 Pro Max, and a new iPhone 17 Air. There will be no iPhone 17 Plus.
+- Key themes: all models could gain ProMotion (120 Hz) and LTPO displays; Apple-designed components (modem and Wi‑Fi/BT chip) are highlighted; possible design and camera changes are noted, with significant uncertainty around specifics.
+Lineup and Timing:
+- Planned launch: September 2025, following the 2024 iPhone 16 cycle.
+- Models: iPhone 17, iPhone 17 Air, iPhone 17 Pro, iPhone 17 Pro Max.
+- No iPhone 17 Plus in 2025; the Air is described as a slimmer, mid-range option rather than a direct Plus successor.
+- The Air is expected to be around 6.6 inches in display size and about 6 mm thick (rumors vary on exact thickness).
+Design:
+- iPhone 17 (standard) likely resembles the iPhone 16, with potential for a new display size but not confirmed.
+- iPhone 17 Air: described as a significantly thinner device; may have a horizontal camera bar and a single-lens rear camera; a thinner form factor could mean no SIM tray in some markets.
+- iPhone 17 Pro and Pro Max: rumored to move from titanium to aluminum frames; back may be half aluminum/half glass to support MagSafe; a larger, possibly horizontal/rectangular camera bump is expected.
+- CAD renders and leaked images have shown varying designs, including a camera bar across the back; some renderings are questioned about accuracy.
+Display:
+- ProMotion across all models (120 Hz) with LTPO OLED panels (enables variable refresh rate and potential always-on display).
+- All four models are anticipated to share LTPO tech, enabling 1 Hz to 120 Hz refresh rates.
+- A new anti-reflective, more scratch-resistant coating is rumored to replace the current Ceramic Shield on the display.
+Chips and Modem:
+- A-series chips: standard iPhone 17 and iPhone 17 Air expected to use an A19-like chip; Pro models may use an A19 Pro or equivalent.
+- Apple-designed 5G modem: Air is expected to be among the first iPhones with an Apple-designed modem (potentially slower mmWave support; sub-6 GHz only). Other models may continue using Qualcomm modems.
+- Apple-designed Wi‑Fi/BT chip with Wi‑Fi 7 across all models.
+RAM and Performance:
+- RAM: rumors suggest up to 12 GB on the higher-end Pro models; standard iPhone 17 might have 8 GB. Some sources claim 12 GB could be limited to the Pro Max, with other models at 8 GB; other claims vary (e.g., Air potentially at 8 GB).
+Battery and Charging:
+- Battery tech: Pro models may use easier-to-remove adhesive similar to iPhone 16/16 Plus; some rumors indicate all models could adopt easier-to-remove battery adhesive.
+- Charging: maximum wired charging of up to 35W, consistent with current generations.
+Cameras:
+- Front camera: all models rumored to have a 24 MP front-facing camera with a six-element lens.
+- iPhone 17 Pro Max: rumored to feature a 48 MP Wide, 48 MP Ultra Wide, and 48 MP telephoto (Tetraprism) camera system, potentially making it the first iPhone with three 48 MP sensors.
+- iPhone 17 Air: rumored to have a single-lens 48 MP rear camera.
+- iPhone 17 (standard): expected to retain the current Wide and Ultra Wide setup.
+- iPhone 17 Pro/Pro Max may introduce a larger or redesigned camera bump (horizontal/rectangular) and possible camera layout changes that could affect spatial video.
+- A mechanical aperture (variable) is rumored for some models, allowing adjustable light intake; standard models may keep fixed apertures.
+Pricing:
+- iPhone 17 Air expected to be more affordable than the Pro models.
+- iPhone 17 Pro starts around $999 (pricing rumor).
+Release Details and Uncertainty:
+- September 2025 release window is the main timeline.
+- Many design and feature details are uncertain and based on rumors (e.g., exact thickness of the Air, camera bump shapes, exact display sizes, RAM allocations, and which models get which specific camera configurations).
+- Some rumors conflict (e.g., camera bar designs, Dynamic Island changes, SIM removal across countries), and CAD renders vary in accuracy.
+After the iPhone 17:
+- Speculation about an iPhone 18 Pro in 2026 with a variable-aperture main camera and a C2 modem, plus talk of a foldable iPhone arriving in 2026 or 2027, but these are speculative and not confirmed.
+Notes:
+- The roundup compiles rumors from multiple sources and acknowledges uncertainty where details conflict or are not yet substantiated.

@@ -1,0 +1,5 @@
+Key specifications of iPhone 17 family (256 GB storage if not specified, released on 2025-09-19):
+- iPhone 17: battery life 30 hours video playback; screen size 6.3 inches; thickness 7.95 mm; front camera 18 MP; rear camera 48 MP; rear camera longest focal length 2x; ultrawide camera equipped; Geekbench multicore score 10299; RAM 8 GB; price $799.
+- iPhone 17 Air: battery life 27 hours video playback; screen size 6.5 inches; thickness 5.64 mm; front camera 18 MP; rear camera 48 MP; rear camera longest focal length 2x; ultrawide camera not equipped; Geekbench multicore score 9702; RAM 12 GB; price $999.
+- iPhone 17 Pro: battery life 33 hours video playback; screen size 6.3 inches; thickness 8.75 mm; front camera 18 MP; rear camera 48 MP; rear camera longest focal length 8x; ultrawide camera equipped; Geekbench multicore score 10619; RAM 12 GB; price $1099.
+- iPhone 17 Pro Max: battery life 39 hours video playback; screen size 6.9 inches; thickness 8.75 mm; front camera 18 MP; rear camera 48 MP; rear camera longest focal length 8x; ultrawide camera equipped; Geekbench multicore score 10907; RAM 12 GB; price $1199.

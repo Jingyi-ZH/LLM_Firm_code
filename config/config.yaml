@@ -12,8 +12,20 @@ project:
 # - If you keep `attributes:` and `real_profiles:` at top-level, they will be used.
 # - Otherwise, the runtime loads the app spec from `app.spec_path`.
 app:
-  id: "nvidia_5090"
-  spec_path: "config/apps/Nvidia5090.yaml"
+  # id: "nvidia_5090"
+  # spec_path: "config/apps/Nvidia5090.yaml"
+  # id: "ipadmini7"
+  # spec_path: "config/apps/ipadmini7.yaml"
+  # id: "iphone17e_basestorage"
+  # spec_path: "config/apps/iphone17e_basestorage.yaml"
+  # id: "iphone17e"
+  # spec_path: "config/apps/iphone17e.yaml"
+  id: "iphone17"
+  spec_path: "config/apps/iphone17.yaml"
+  # id: "playstation5pro"
+  # spec_path: "config/apps/playstation5pro.yaml"
+  # id: "applewatch"
+  # spec_path: "config/apps/applewatch.yaml"
   # id: "iphone"
   # spec_path: "config/apps/iphone.yaml"
 
@@ -43,7 +55,7 @@ openai:
   api_key_env_var: "OPENAI_API_KEY"
   logprobs:
     enabled: false
-    model: "gpt-5.1"
+    model: "gpt-4.1"
     temperature: 0.0
     max_output_tokens: 16
     top_logprobs: 2

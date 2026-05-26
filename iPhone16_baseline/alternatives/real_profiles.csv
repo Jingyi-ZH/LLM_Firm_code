@@ -1,0 +1,9 @@
+real_profile_id,battery_life,screen_size,thickness,front_camera,rear_camera,focal_length,ultrawide,geekbench,ram,price
+iPhone 16,22,6.1,7.8,12,48,2,equipped,8205,8,899
+iPhone 16 Plus,27,6.7,7.8,12,48,2,equipped,8208,8,999
+iPhone 16 Pro,27,6.3,8.25,12,48,5,equipped,8581,8,1099
+iPhone 16 Pro Max,33,6.9,8.25,12,48,5,equipped,8504,8,1199
+iPhone 17,30,6.3,7.95,18,48,2,equipped,9191,8,799
+iPhone 17 Air,27,6.5,5.64,18,48,2,not equipped,9323,12,999
+iPhone 17 Pro,33,6.3,8.75,18,48,8,equipped,9737,12,1099
+iPhone 17 Pro Max,39,6.9,8.75,18,48,8,equipped,9776,12,1199

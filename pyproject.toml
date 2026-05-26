@@ -60,7 +60,6 @@ rag = [
 [project.scripts]
 llm-collect = "scripts.run_collection:main"
 llm-train = "scripts.run_training:main"
-llm-analyze = "scripts.run_analysis:main"
 
 [project.urls]
 Homepage = "https://github.com/your-org/llm-belief-elicitation"

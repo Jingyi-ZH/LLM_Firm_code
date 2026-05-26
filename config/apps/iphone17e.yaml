@@ -1,0 +1,179 @@
+app:
+  id: "iphone17e"
+  entity: "smartphone"
+
+prompting:
+  baseline_storage: "128 GB"
+  baseline_color: "black"
+  default_date: "2026-02-27"
+  user_template: |
+    Please consider two smartphone alternatives, both with {baseline_storage} storage capacity and {baseline_color} color:
+    {l0}: {p0}
+    {l1}: {p1}
+
+    Return exactly one label: '{l0}' or '{l1}'. Output nothing else, no quotes, no punctuation, no spaces, and no line breaks.
+  system_texts:
+    prompt_0: "You will be provided with two smartphone alternatives described by a set of attributes. Decide which one is more likely to match Apple's upcoming iPhone 17e next week."
+    prompt_1: "Two smartphone profiles will be shown. Select the one that is more plausible for Apple's unreleased iPhone 17e expected next week."
+    prompt_2: "Choose the smartphone specification set that better corresponds to Apple's iPhone 17e, anticipated next week."
+    prompt_3: "You will receive two smartphone descriptions. Identify which one is more likely to align with Apple's iPhone 17e expected next week."
+    prompt_4: "In this task, two smartphone configurations are provided. Determine which configuration is more plausible for Apple's upcoming iPhone 17e next week."
+    prompt_5: "Evaluate two smartphone prototypes and select the one most consistent with Apple's expected iPhone 17e profile next week."
+    prompt_6: "Two smartphone alternatives defined by multiple attributes will be shown. Decide which alternative is more realistic for Apple's upcoming iPhone 17e next week."
+    prompt_7: "Two smartphone configurations are presented as stimuli. Determine which configuration more plausibly represents Apple's iPhone 17e expected next week."
+    prompt_8: "This task presents two smartphone concepts. Select the concept more likely to reflect Apple's iPhone 17e expected next week."
+    prompt_9: "Two smartphone attribute sets will be evaluated. Decide which set is more likely to match Apple's upcoming iPhone 17e next week."
+  neutral_criteria: "Base your assessment on historical update patterns within Apple's e-series iPhones, technical feasibility for a near-term refresh, realistic component constraints, and continuity of e-series value positioning."
+
+attributes:
+  battery_life:
+    name: "battery life (in hours of video playback)"
+    prompt_name: "battery life"
+    values: [18, 24, 30, 36]
+    format:
+      suffix: " hours video playback"
+      cast: "int"
+    jitter:
+      dist: "normal"
+      scale: 1.0
+      round: 0
+      clip: [14, 42]
+      p_no_jitter: 0.40
+  screen_size:
+    name: "screen size (in inches)"
+    prompt_name: "screen size"
+    values: [6.1, 6.3, 6.6, 6.9]
+    format:
+      suffix: " inches"
+    jitter:
+      enabled: false
+  thickness:
+    name: "thickness (in mm)"
+    prompt_name: "thickness"
+    values: [5.8, 6.8, 7.8, 8.3, 8.8]
+    format:
+      suffix: " mm"
+    jitter:
+      dist: "normal"
+      scale: 0.2
+      round: 2
+      clip: [5.4, 9.2]
+      p_no_jitter: 0.40
+  front_camera:
+    name: "front camera resolution (in MP)"
+    prompt_name: "front camera resolution"
+    values: [12, 18, 24, 30]
+    format:
+      suffix: " MP"
+      cast: "int"
+    jitter:
+      dist: "normal"
+      scale: 1.0
+      round: 0
+      clip: [8, 48]
+      p_no_jitter: 0.40
+  rear_camera:
+    name: "rear camera main lens resolution (in MP)"
+    prompt_name: "rear camera main lens resolution"
+    values: [36, 48, 60]
+    format:
+      suffix: " MP"
+      cast: "int"
+    jitter:
+      dist: "normal"
+      scale: 3.0
+      round: 0
+      clip: [24, 72]
+      p_no_jitter: 0.40
+  focal_length:
+    name: "rear camera longest focal length (in x)"
+    prompt_name: "rear camera longest focal length"
+    values: [1, 2, 3, 5]
+    format:
+      suffix: "x"
+      cast: "int"
+    jitter:
+      dist: "normal"
+      scale: 0.2
+      round: 1
+      clip: [1.0, 8.0]
+      p_no_jitter: 0.40
+  ultrawide:
+    name: "ultrawide camera"
+    prompt_name: "ultrawide camera"
+    values: ["equipped", "not equipped"]
+    categorical: true
+    encode_map:
+      not equipped: 1
+      equipped: 0
+    jitter:
+      enabled: false
+  geekbench:
+    name: "Geekbench multicore score"
+    prompt_name: "Geekbench multicore score"
+    values: [7000, 7800, 8600, 9400]
+    format:
+      cast: "int"
+    jitter:
+      dist: "normal"
+      scale: 100
+      round: 0
+      clip: [6000, 10000]
+      p_no_jitter: 0.40
+  ram:
+    name: "RAM"
+    prompt_name: "RAM"
+    values: [4, 8, 12, 16]
+    format:
+      suffix: " GB"
+      cast: "int"
+    jitter:
+      enabled: false
+  price:
+    name: "price"
+    prompt_name: "price"
+    values: [499, 599, 699, 799, 899]
+    format:
+      prefix: "$"
+      cast: "int"
+    jitter:
+      dist: "uniform"
+      scale: 30
+      round: 0
+      clip: [449, 949]
+      p_no_jitter: 0.40
+
+real_profiles:
+  iPhone 16e:
+    battery_life: 26
+    screen_size: 6.1
+    thickness: 7.8
+    front_camera: 12
+    rear_camera: 48
+    focal_length: 2
+    ultrawide: "not equipped"
+    geekbench: 7968
+    ram: 8
+    price: 599
+  iPhone 17e 128:
+    battery_life: 26
+    screen_size: 6.1
+    thickness: 6
+    front_camera: 12
+    rear_camera: 48
+    focal_length: 2
+    ultrawide: "not equipped"
+    geekbench: 9241
+    ram: 8
+    price: 499
+  iPhone 17e 256:
+    battery_life: 26
+    screen_size: 6.1
+    thickness: 6
+    front_camera: 12
+    rear_camera: 48
+    focal_length: 2
+    ultrawide: "not equipped"
+    geekbench: 9241
+    ram: 8
+    price: 599

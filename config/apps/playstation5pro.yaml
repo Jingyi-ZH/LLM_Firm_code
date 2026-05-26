@@ -1,0 +1,175 @@
+app:
+  id: "playstation5pro"
+  entity: "game_console"
+
+prompting:
+  default_date: "2024-06-01"
+  user_template: |
+    Please consider two game console alternatives described by a set of attributes:
+    {l0}: {p0}
+    {l1}: {p1}
+
+    Return exactly one label: '{l0}' or '{l1}'. Output nothing else, no quotes, no punctuation, no spaces, and no line breaks.
+  system_texts:
+    prompt_0: "You will be provided with two game console alternatives. Decide which one is more likely to match the expected specification profile of Sony's PlayStation 5 Pro, anticipated to launch within 6 months."
+    prompt_1: "Two game console profiles will be shown. Select the one more plausible for Sony's PlayStation 5 Pro, which is expected to launch within the next 6 months."
+    prompt_2: "Choose the game console configuration that better corresponds to Sony's PlayStation 5 Pro, an unreleased product expected within a 6-month horizon."
+    prompt_3: "Pick the option more consistent with Sony's PlayStation 5 Pro, anticipated to launch in the coming 6 months."
+    prompt_4: "Determine which console spec is more plausible for Sony's PlayStation 5 Pro, expected to debut over the next 6 months."
+    prompt_5: "Select the console profile most consistent with Sony's PlayStation 5 Pro, which is not yet released and is expected within the next 6 months."
+    prompt_6: "Choose the configuration more realistic for Sony's PlayStation 5 Pro, projected for release within approximately 6 months."
+    prompt_7: "Decide which profile more plausibly belongs to Sony's PlayStation 5 Pro, expected to launch in roughly the next 6 months."
+    prompt_8: "Select the concept more likely for Sony's PlayStation 5 Pro, expected to be released within a 6-month timeframe."
+    prompt_9: "Decide which set is more likely to be represented in Sony's PlayStation 5 Pro, expected to arrive within the next 6 months."
+  neutral_criteria_texts:
+    prompt_0: "Base your assessment on technical feasibility, product segmentation, performance/thermal constraints, and historical PlayStation generation trends."
+    prompt_1: "Base your assessment on engineering feasibility, product-tier positioning, performance and thermal limits, and historical PlayStation generation patterns."
+    prompt_2: "Base your assessment on what is technically plausible, how console tiers are typically segmented, realistic performance/thermal envelopes, and prior-generation trends."
+    prompt_3: "Base your assessment on architectural and manufacturing feasibility, expected product segmentation, performance/thermals, and historical console roadmap trends."
+    prompt_4: "Base your assessment on feasibility and constraints (performance, thermals), expected market/portfolio positioning, and patterns observed across past PlayStation generations."
+    prompt_5: "Base your assessment on practical feasibility, Sony-style product segmentation, plausible performance/thermal budgets, and cross-generation console trends."
+    prompt_6: "Base your assessment on what is realistic under performance and thermal constraints, consistent with product segmentation, and aligned with historical console generation trajectories."
+    prompt_7: "Base your assessment on technical plausibility, segmentation logic for a premium console, performance/thermal constraints, and lessons from historical PlayStation generation trends."
+    prompt_8: "Base your assessment on feasibility (including performance/thermal considerations), product positioning and segmentation, and historical trends across console generations."
+    prompt_9: "Base your assessment on technical feasibility, realistic performance/thermal envelopes, expected product segmentation, and historical console generation trendlines."
+
+attributes:
+  launch_msrp_usd:
+    name: "launch MSRP (USD)"
+    prompt_name: "launch MSRP"
+    values: [499, 599, 699, 799]
+    format:
+      prefix: "$"
+      cast: "int"
+    jitter:
+      dist: "uniform"
+      scale: 20
+      round: 0
+      clip: [499, 799]
+      p_no_jitter: 0.40
+  cpu_cores:
+    name: "CPU cores"
+    prompt_name: "CPU cores"
+    values: [4, 8, 12]
+    format:
+      cast: "int"
+    jitter:
+      enabled: false
+  gpu_peak_fp32_tflops:
+    name: "GPU peak FP32 (TFLOPS)"
+    prompt_name: "GPU peak FP32"
+    values: [8, 12, 16, 20, 24]
+    format:
+      suffix: " TFLOPS"
+      cast: "int"
+    jitter:
+      dist: "normal"
+      scale: 0.5
+      round: 0
+      clip: [8, 24]
+      p_no_jitter: 0.40
+  system_memory_gb:
+    name: "system memory (GB)"
+    prompt_name: "system memory"
+    values: [12, 16, 18, 22]
+    format:
+      suffix: " GB"
+      cast: "int"
+    jitter:
+      dist: "normal"
+      scale: 0.4
+      round: 0
+      clip: [12, 22]
+      p_no_jitter: 0.40
+  internal_storage_gb:
+    name: "internal storage capacity (GB)"
+    prompt_name: "internal storage"
+    values: [1000, 1500, 2000, 2500, 3000]
+    format:
+      suffix: " GB"
+      cast: "int"
+    jitter:
+      dist: "normal"
+      scale: 60
+      round: 0
+      clip: [1000, 3000]
+      p_no_jitter: 0.40
+  storage_type:
+    name: "storage type"
+    prompt_name: "storage type"
+    values: ["HDD", "SSD"]
+    categorical: true
+    encode_map:
+      HDD: 0
+      SSD: 1
+    jitter:
+      enabled: false
+  max_output_vertical_resolution:
+    name: "max output vertical resolution"
+    prompt_name: "max output vertical resolution"
+    values: ["2K", "4K", "8K"]
+    categorical: true
+    encode_map:
+      "2K": 0
+      "4K": 1
+      "8K": 2
+    jitter:
+      enabled: false
+
+real_profiles:
+  PS1:
+    launch_msrp_usd: 499
+    cpu_cores: 4
+    gpu_peak_fp32_tflops: 8
+    system_memory_gb: 12
+    internal_storage_gb: 1000
+    storage_type: "HDD"
+    max_output_vertical_resolution: "2K"
+  PS2:
+    launch_msrp_usd: 499
+    cpu_cores: 4
+    gpu_peak_fp32_tflops: 8
+    system_memory_gb: 12
+    internal_storage_gb: 1000
+    storage_type: "HDD"
+    max_output_vertical_resolution: "2K"
+  PS3:
+    launch_msrp_usd: 499
+    cpu_cores: 4
+    gpu_peak_fp32_tflops: 8
+    system_memory_gb: 12
+    internal_storage_gb: 1000
+    storage_type: "HDD"
+    max_output_vertical_resolution: "2K"
+  PS4:
+    launch_msrp_usd: 499
+    cpu_cores: 8
+    gpu_peak_fp32_tflops: 8
+    system_memory_gb: 12
+    internal_storage_gb: 1000
+    storage_type: "HDD"
+    max_output_vertical_resolution: "2K"
+  PS4 Pro:
+    launch_msrp_usd: 599
+    cpu_cores: 8
+    gpu_peak_fp32_tflops: 12
+    system_memory_gb: 12
+    internal_storage_gb: 1500
+    storage_type: "HDD"
+    max_output_vertical_resolution: "4K"
+  PS5:
+    launch_msrp_usd: 499
+    cpu_cores: 8
+    gpu_peak_fp32_tflops: 12
+    system_memory_gb: 16
+    internal_storage_gb: 1500
+    storage_type: "SSD"
+    max_output_vertical_resolution: "4K"
+  PS5 Pro:
+    launch_msrp_usd: 699
+    cpu_cores: 8
+    gpu_peak_fp32_tflops: 16
+    system_memory_gb: 18
+    internal_storage_gb: 2000
+    storage_type: "SSD"
+    max_output_vertical_resolution: "8K"

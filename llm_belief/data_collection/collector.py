@@ -245,6 +245,318 @@ class PairwiseCollector:
                 f"  config openai.api_key_env_var: {self.cfg.get('openai', 'api_key_env_var')}"
             ) from err
 
+    def _extract_label_probabilities(
+        self,
+        response: Any,
+        labels: tuple[str, str],
+    ) -> tuple[Optional[float], Optional[float]]:
+        """Extract probabilities for two explicit labels from first-token logprobs."""
+        output = self._get_field(response, "output", []) or []
+        if not output:
+            return None, None
+        content = self._get_field(output[0], "content", []) or []
+        if not content:
+            return None, None
+        logprobs = self._get_field(content[0], "logprobs", None)
+        if not logprobs:
+            return None, None
+
+        token_info = logprobs[0]
+        token = (self._get_field(token_info, "token", "") or "").strip().upper()
+        logprob = self._get_field(token_info, "logprob", None)
+        top_logprobs = self._get_field(token_info, "top_logprobs", []) or []
+
+        a, b = labels[0].upper(), labels[1].upper()
+        prob_a: Optional[float] = None
+        prob_b: Optional[float] = None
+
+        if logprob is not None:
+            if token == a:
+                prob_a = float(np.exp(logprob))
+            elif token == b:
+                prob_b = float(np.exp(logprob))
+
+        for item in top_logprobs:
+            t = (self._get_field(item, "token", "") or "").strip().upper()
+            lp = self._get_field(item, "logprob", None)
+            if lp is None:
+                continue
+            if t == a:
+                prob_a = float(np.exp(lp))
+            elif t == b:
+                prob_b = float(np.exp(lp))
+
+        return prob_a, prob_b
+
+    def _call_api_yesno(
+        self,
+        prompt: List[Dict[str, str]],
+        reasoning_effort: Optional[str] = None,
+    ) -> tuple[str, Optional[float], Optional[float]]:
+        """Call API for Y/N task; optionally return prob_yes/prob_no when logprobs enabled."""
+        effort = reasoning_effort or self.reasoning_effort
+        attempted_model = self.logprobs_model if self.logprobs_enabled else self.model
+        try:
+            if self.logprobs_enabled:
+                response = self.client.responses.create(
+                    model=self.logprobs_model,
+                    input=prompt,
+                    temperature=self.logprobs_temperature,
+                    max_output_tokens=self.logprobs_max_output_tokens,
+                    top_logprobs=self.logprobs_top_logprobs,
+                    include=self.logprobs_include,
+                )
+                text = response.output_text
+                prob_yes, prob_no = self._extract_label_probabilities(response, ("Y", "N"))
+                return text, prob_yes, prob_no
+
+            response = self.client.responses.create(
+                model=self.model,
+                input=prompt,
+                temperature=self.temperature,
+                reasoning={"effort": effort},
+            )
+            return response.output_text, None, None
+        except PermissionDeniedError as err:
+            body = getattr(err, "body", None)
+            detail = None
+            if isinstance(body, dict):
+                detail = (body.get("error") or {}).get("message")
+            raise RuntimeError(
+                "OpenAI API returned 403 PermissionDenied.\n"
+                f"  attempted_model: {attempted_model}\n"
+                f"  logprobs_enabled: {self.logprobs_enabled}\n"
+                "Common causes:\n"
+                "- Your API key / project does not have access to this model.\n"
+                "- The model is disabled by org/project policy.\n"
+                "Fix:\n"
+                "- If running with --logprobs on, change config/config.yaml → openai.logprobs.model.\n"
+                "- Otherwise change config/config.yaml → openai.model.\n"
+                + (f"\nProvider message: {detail}" if detail else "")
+            ) from err
+        except AuthenticationError as err:
+            raise RuntimeError(
+                "OpenAI API authentication failed.\n"
+                "Check that your API key environment variable is set and points to the correct key.\n"
+                f"  config openai.api_key_env_var: {self.cfg.get('openai', 'api_key_env_var')}"
+            ) from err
+
+    @staticmethod
+    def _normalize_yes_no(response_text: str) -> str:
+        s = (response_text or "").strip().upper()
+        if not s:
+            return ""
+        first = s[0]
+        return first if first in {"Y", "N"} else ""
+
+    def _build_question_prompt(
+        self,
+        question: str,
+        product: str,
+        prompt_variant: int,
+        date_override: Optional[str] = None,
+    ) -> List[Dict[str, str]]:
+        """Build prompt messages for question-level Y/N elicitation."""
+        date_text = date_override or self.cfg.get("prompting", "default_date", default="2024-06-01")
+        idx = int(prompt_variant) % 10
+        system_texts = [
+            "You will be provided with a forecast of {product}'s specification, anticipated to launch within 6 months.",
+            "You will review a projected specification statement for {product}, expected to launch within the next 6 months.",
+            "A forecasted specification statement for {product} will be shown; treat it as a model expected within 6 months.",
+            "You will evaluate a candidate specification forecast for {product}, anticipated over a 6-month horizon.",
+            "Consider a potential specification statement for {product}, expected to debut in roughly 6 months.",
+            "Assess a proposed specification forecast for {product}, which is anticipated to launch within approximately 6 months.",
+            "You will judge a forecasted product statement for {product}, projected for release within the next 6 months.",
+            "Evaluate whether a given specification statement is plausible for {product}, expected in about 6 months.",
+            "You are given a forward-looking specification claim for {product}, expected to launch within a 6-month timeframe.",
+            "Review a forecast statement about {product}'s specs, with launch anticipated within the next 6 months.",
+        ]
+        criteria_texts = [
+            "Base your assessment on technical feasibility, product segmentation, performance/thermal constraints, and historical {product} generation trends.",
+            "Base your assessment on engineering feasibility, product-tier positioning, realistic constraints, and historical {product} generation patterns.",
+            "Base your assessment on what is technically plausible, how tiers are typically segmented, realistic constraints, and prior-generation trends for {product}.",
+            "Base your assessment on architecture/manufacturing feasibility, expected segmentation, and historical roadmap trends for {product}.",
+            "Base your assessment on feasibility and constraints, expected portfolio positioning, and patterns observed across past {product} generations.",
+            "Base your assessment on practical feasibility, brand-style segmentation, plausible capability envelopes, and cross-generation trends for {product}.",
+            "Base your assessment on what is realistic under constraints, consistent with product segmentation, and aligned with historical {product} trajectories.",
+            "Base your assessment on technical plausibility, segmentation logic, and lessons from historical {product} generation trends.",
+            "Base your assessment on feasibility considerations, product positioning, segmentation logic, and long-run trends across {product} generations.",
+            "Base your assessment on technical feasibility, realistic capability envelopes, expected segmentation, and historical trendlines for {product}.",
+        ]
+
+        system_content = (
+            f"Assume the current date is {date_text}. "
+            + system_texts[idx].format(product=product)
+        )
+        user_content = (
+            str(question).strip()
+            + " Return exactly one label: 'Y' or 'N'. 'Y' for Yes and 'N' for No."
+        )
+        return [
+            {"role": "system", "content": system_content},
+            {"role": "user", "content": user_content},
+        ]
+
+    def collect_questions_csv(
+        self,
+        question_csv: str,
+        product: str,
+        question_column: str = "question",
+        reasoning_effort: Optional[str] = None,
+        output_file: Optional[str] = None,
+        date_override: Optional[str] = None,
+    ) -> Path:
+        """Read CSV questions and ask Y/N for each row (single or 10 prompt variants)."""
+        csv_path_in = Path(question_csv)
+        if not csv_path_in.is_absolute():
+            cwd_path = Path.cwd() / csv_path_in
+            root_path = _project_root / csv_path_in
+            if cwd_path.is_file():
+                csv_path_in = cwd_path
+            elif root_path.is_file():
+                csv_path_in = root_path
+        if not csv_path_in.is_file():
+            raise FileNotFoundError(f"Question CSV not found: {question_csv}")
+
+        qdf = pd.read_csv(csv_path_in)
+        if qdf.empty:
+            raise ValueError(f"Question CSV has no rows: {csv_path_in}")
+
+        q_col = question_column
+        if q_col not in qdf.columns:
+            if len(qdf.columns) == 1:
+                q_col = str(qdf.columns[0])
+            else:
+                raise ValueError(
+                    f"Question column '{question_column}' not found in CSV columns: {list(qdf.columns)}"
+                )
+
+        logger = get_experiment_logger("questioncsv", Path(csv_path_in).stem)
+        self._log_run_config(logger)
+        logger.info("question_csv=%s, product=%s, question_column=%s", csv_path_in, product, q_col)
+
+        effective_temp = self.logprobs_temperature if self.logprobs_enabled else self.temperature
+        num_variants_cfg = int(self.cfg.get("collection", "num_prompt_variants", default=10) or 10)
+        num_variants = 1 if float(effective_temp) == 0 else max(1, num_variants_cfg)
+
+        if output_file is None:
+            output_file = f"{Path(csv_path_in).stem}_questioncsv.csv"
+            csv_path_out = get_output_path(output_file)
+        else:
+            out_arg = Path(output_file)
+            if out_arg.is_absolute():
+                csv_path_out = out_arg
+            else:
+                # Treat relative paths as project-root relative when they include folders,
+                # otherwise keep legacy behavior under output/.
+                if ("/" in output_file) or ("\\" in output_file):
+                    csv_path_out = (_project_root / out_arg).resolve()
+                else:
+                    csv_path_out = get_output_path(output_file)
+            csv_path_out.parent.mkdir(parents=True, exist_ok=True)
+
+        cols = [
+            "model",
+            "temperature",
+            "question",
+            "prompt_variant",
+            "prompt",
+            "prompt_response",
+            "answer_yes",
+            "answer_no",
+        ]
+        if self.logprobs_enabled:
+            cols += ["prob_yes", "prob_no"]
+
+        file_exists = csv_path_out.is_file()
+        completed: set[tuple[str, int]] = set()
+        if file_exists and csv_path_out.stat().st_size > 0:
+            try:
+                existing = pd.read_csv(csv_path_out, usecols=["question", "prompt_variant"])
+                for _, r in existing.iterrows():
+                    q_raw = r.get("question")
+                    pv_raw = r.get("prompt_variant")
+                    if pd.isna(q_raw) or pd.isna(pv_raw):
+                        continue
+                    q_key = str(q_raw).strip()
+                    try:
+                        pv_key = int(pv_raw)
+                    except Exception:
+                        continue
+                    completed.add((q_key, pv_key))
+                logger.info(
+                    "Resuming question-csv: found %s completed (question, prompt_variant) rows in %s",
+                    len(completed),
+                    csv_path_out,
+                )
+            except Exception:
+                completed = set()
+                logger.warning("Unable to parse existing question-csv output for resume; processing from scratch.")
+
+        start_time = datetime.now()
+        last_call_time = start_time
+        logger.info("API session start: %s", start_time.strftime("%Y-%m-%d %H:%M:%S"))
+
+        with open(csv_path_out, mode="a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=cols)
+            if not file_exists:
+                writer.writeheader()
+
+            row_id = 0
+            for _, row in qdf.iterrows():
+                question = row.get(q_col)
+                if pd.isna(question):
+                    continue
+                question_text = str(question).strip()
+                if not question_text:
+                    continue
+
+                for pv in range(num_variants):
+                    if (question_text, pv) in completed:
+                        continue
+                    prompt = self._build_question_prompt(
+                        question=question_text,
+                        product=product,
+                        prompt_variant=pv,
+                        date_override=date_override,
+                    )
+                    res, prob_yes, prob_no = self._call_api_yesno(
+                        prompt,
+                        reasoning_effort=reasoning_effort,
+                    )
+                    normalized = self._normalize_yes_no(res)
+
+                    call_time = datetime.now()
+                    logger.info(
+                        "Question row %s variant %s: %ss",
+                        row_id,
+                        pv,
+                        round((call_time - last_call_time).total_seconds()),
+                    )
+                    last_call_time = call_time
+
+                    out_row = {
+                        "model": self.logprobs_model if self.logprobs_enabled else self.model,
+                        "temperature": self.logprobs_temperature if self.logprobs_enabled else self.temperature,
+                        "question": question_text,
+                        "prompt_variant": pv,
+                        "prompt": json.dumps(prompt, ensure_ascii=False),
+                        "prompt_response": res,
+                        "answer_yes": 1 if normalized == "Y" else 0,
+                        "answer_no": 1 if normalized == "N" else 0,
+                    }
+                    if self.logprobs_enabled:
+                        out_row["prob_yes"] = prob_yes
+                        out_row["prob_no"] = prob_no
+                    writer.writerow(out_row)
+                    completed.add((question_text, pv))
+                row_id += 1
+
+        end_time = datetime.now()
+        logger.info("API session end: %s", end_time.strftime("%Y-%m-%d %H:%M:%S"))
+        logger.info("Total duration: %ss", round((end_time - start_time).total_seconds()))
+        return csv_path_out
+
     def _get_prompt_pair(
         self,
         labels: List[str],
@@ -274,7 +586,8 @@ class PairwiseCollector:
             attrs_cfg = self.cfg.get_attributes() or {}
             display_row: Dict[str, Any] = {}
             for key, value in (profile_cfg_keys or {}).items():
-                display_name = attrs_cfg.get(key, {}).get("name", key)
+                cfg = attrs_cfg.get(key, {}) if isinstance(attrs_cfg, dict) else {}
+                display_name = cfg.get("prompt_name") or cfg.get("name") or key
                 display_row[display_name] = value
 
             df = pd.DataFrame([display_row])
@@ -598,6 +911,8 @@ class PairwiseCollector:
         real_profiles: List[Tuple[str, Dict[str, Any]]],
         reasoning_effort: Optional[str] = None,
         output_file: Optional[str] = None,
+        context_file: Optional[str] = None,
+        context_date: Optional[str] = None,
     ) -> Path:
         """Run all-combinations (all-pairs) comparisons across a provided set of real profiles.
 
@@ -611,6 +926,9 @@ class PairwiseCollector:
             output_file: Optional output filename/path.
                 - If relative, written under config paths.output_dir.
                 - If absolute, written to that exact location.
+            context_file: Optional context text file to inject as a leading system message
+                for every pairwise comparison.
+            context_date: Optional override date passed to prompt generation.
 
         Returns:
             Path to output CSV file.
@@ -627,6 +945,25 @@ class PairwiseCollector:
         for rid, profile in real_profiles:
             ids.append(str(rid))
             formatted_profiles.append(self._get_real_profile_formatted(rid, real_profile=profile))
+
+        external_knowledge: Optional[List[Dict[str, str]]] = None
+        if context_file:
+            context_path = Path(context_file)
+            if not context_path.is_absolute():
+                context_path = get_data_path(context_file)
+            if not context_path.is_file():
+                raise FileNotFoundError(f"Context file not found: {context_path}")
+            with open(context_path, "r", encoding="utf-8") as f:
+                context_text = f.read()
+            external_knowledge = [
+                {
+                    "role": "system",
+                    "content": (
+                        "The following context is provided:\n"
+                        f"{context_text}\n"
+                    ),
+                }
+            ]
 
         # Output path
         if output_file is None:
@@ -736,7 +1073,14 @@ class PairwiseCollector:
 
                 prompt_variant = pair_id % num_variants
                 prompt_pair, prompt_labels = self._get_prompt_pair(labels, profiles, pair_id)
-                prompt = get_prompt_variant(prompt_variant, prompt_pair, prompt_labels)
+                prompt = get_prompt_variant(
+                    prompt_variant,
+                    prompt_pair,
+                    prompt_labels,
+                    date_override=context_date,
+                )
+                if external_knowledge is not None:
+                    prompt = external_knowledge + prompt
 
                 res, prob_chosen, prob_nochosen = self._call_api(
                     prompt,

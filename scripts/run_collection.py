@@ -18,10 +18,6 @@ Usage:
     python scripts/run_collection.py --experiment context --real-profile "iPhone 16 Pro" \
         --context data/re16.txt
 
-    # RAG via RAG_langchain
-    python scripts/run_collection.py --experiment rag --real-profile "iPhone 16 Pro" \
-        --api-key-env OPENAI_API_KEY
-
     # Custom FAISS-based RAG
     python scripts/run_collection.py --experiment rag-faiss --real-profile "iPhone 16 Pro" \
         --rag-faiss path/to/index.faiss --rag-meta path/to/records.jsonl
@@ -29,7 +25,6 @@ Usage:
 
 import argparse
 import sys
-import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict, Any
@@ -73,6 +68,11 @@ def _resolve_output_dir(output_arg: str) -> Path:
         out_dir = _project_root / p
     out_dir.mkdir(parents=True, exist_ok=True)
     return out_dir
+
+
+def _strip_underscores(name: str) -> str:
+    """Normalize a filename stem by removing underscores."""
+    return str(name).replace("_", "")
 
 
 def _load_profiles_csv(
@@ -192,13 +192,13 @@ Examples:
     python scripts/run_collection.py --experiment context --real-profile "iPhone 16 Pro" \
         --context data/re16.txt
 
-    # RAG via RAG_langchain
-    python scripts/run_collection.py --experiment rag --real-profile "iPhone 16 Pro" \
-        --api-key-env OPENAI_API_KEY
-
     # Custom FAISS-based RAG
     python scripts/run_collection.py --experiment rag-faiss --real-profile "iPhone 16 Pro" \
         --rag-faiss path/to/index.faiss --rag-meta path/to/records.jsonl
+
+    # Question CSV (one row = one question, Y/N output)
+    python scripts/run_collection.py --experiment question-csv --question-csv data/questions.csv \
+        --question-column question --product "Apple Watch"
         """,
     )
 
@@ -209,9 +209,9 @@ Examples:
             "fixreal",
             "top",
             "context",
-            "rag",
             "rag-faiss",
             "allcomb",
+            "question-csv",
         ],
         required=True,
         help="Type of experiment to run",
@@ -230,9 +230,25 @@ Examples:
         "--real-profile",
         type=str,
         help=(
-            "Real profile ID for fixreal/top/context/rag/rag-faiss experiments (e.g., 'iPhone 16 Pro'). "
+            "Real profile ID for fixreal/top/context/rag-faiss experiments (e.g., 'iPhone 16 Pro'). "
             "For fixreal only, you may also pass a CSV path to run fixreal once per row."
         ),
+    )
+    parser.add_argument(
+        "--question-csv",
+        type=str,
+        help="CSV path where each row is one question (question-csv experiment only)",
+    )
+    parser.add_argument(
+        "--question-column",
+        type=str,
+        default="question",
+        help="Question column name in --question-csv (default: question)",
+    )
+    parser.add_argument(
+        "--product",
+        type=str,
+        help="Product name placeholder used in question-csv prompts (e.g., 'Apple Watch')",
     )
     parser.add_argument(
         "--n-makeup",
@@ -328,17 +344,6 @@ Examples:
         default=None,
         help="Enable or disable logprobs (collector experiments only)",
     )
-    parser.add_argument(
-        "--model",
-        type=str,
-        help="Override model name (rag only)",
-    )
-    parser.add_argument(
-        "--temperature",
-        type=float,
-        help="Override sampling temperature (rag only)",
-    )
-
     args = parser.parse_args()
 
     # Validate arguments
@@ -348,9 +353,11 @@ Examples:
     elif args.experiment in ["fixreal", "top", "context", "rag-faiss", "allcomb"]:
         if args.real_profile is None:
             parser.error(f"--real-profile is required for {args.experiment} experiment")
-    elif args.experiment == "rag":
-        if args.real_profile is None:
-            parser.error("--real-profile is required for rag experiment")
+    elif args.experiment == "question-csv":
+        if not args.question_csv:
+            parser.error("--question-csv is required for question-csv experiment")
+        if not args.product:
+            parser.error("--product is required for question-csv experiment")
     if args.experiment == "context" and not args.context:
         parser.error("--context is required for context experiment")
     if args.alternative_set and args.experiment != "fixreal":
@@ -547,8 +554,15 @@ Examples:
         if len(csv_profiles) < 2:
             parser.error("--real-profile CSV must contain at least 2 rows for allcomb experiment")
 
-        input_name = Path(args.real_profile).stem
-        output_file = f"{input_name}_allcomb.csv"
+        input_name = _strip_underscores(Path(args.real_profile).stem)
+        context_stem = None
+        if args.context:
+            context_stem = _strip_underscores(Path(args.context).stem)
+        output_file = (
+            f"{input_name}_allcomb_{context_stem}.csv"
+            if context_stem
+            else f"{input_name}_allcomb.csv"
+        )
         if args.output:
             if not _is_output_dir_arg(args.output):
                 parser.error("--output for allcomb must be a folder path")
@@ -563,6 +577,8 @@ Examples:
             real_profiles=csv_profiles,
             reasoning_effort=args.reasoning_effort,
             output_file=output_file,
+            context_file=args.context,
+            context_date=args.context_date,
         )
     elif args.experiment == "top":
         collector = PairwiseCollector(
@@ -589,31 +605,6 @@ Examples:
             context_date=args.context_date or "2025-03-15",
             reasoning_effort=args.reasoning_effort,
         )
-    elif args.experiment == "rag":
-        rag_script = _project_root / "RAG_langchain" / "main_rag_langchain.py"
-        if not rag_script.is_file():
-            raise FileNotFoundError(f"RAG_langchain script not found: {rag_script}")
-        account = args.api_key_env or "OPENAI_API_KEY"
-        cmd = [
-            sys.executable,
-            str(rag_script),
-            "--real_profile_id",
-            args.real_profile,
-            "--account",
-            account,
-        ]
-        if args.reasoning_effort:
-            cmd += ["--reasoning-effort", args.reasoning_effort]
-        if args.logprobs is not None:
-            cmd += ["--logprobs", args.logprobs]
-        if args.model:
-            cmd += ["--model", args.model]
-        if args.temperature is not None:
-            cmd += ["--temperature", str(args.temperature)]
-        if args.n_makeup is not None:
-            cmd += ["--n_makeup", str(args.n_makeup)]
-        subprocess.run(cmd, check=True)
-        output_path = None
     elif args.experiment == "rag-faiss":
         collector = PairwiseCollector(
             api_key_env_var=args.api_key_env,
@@ -630,6 +621,19 @@ Examples:
             rag_embed_model=args.rag_embed_model or "text-embedding-3-small",
             reasoning_effort=args.reasoning_effort,
             output_file=args.output,
+        )
+    elif args.experiment == "question-csv":
+        collector = PairwiseCollector(
+            api_key_env_var=args.api_key_env,
+            logprobs=args.logprobs,
+        )
+        output_path = collector.collect_questions_csv(
+            question_csv=args.question_csv,
+            product=args.product,
+            question_column=args.question_column,
+            reasoning_effort=args.reasoning_effort,
+            output_file=args.output,
+            date_override=args.context_date,
         )
 
     if output_path:

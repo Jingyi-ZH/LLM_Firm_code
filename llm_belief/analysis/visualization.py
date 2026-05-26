@@ -28,10 +28,13 @@ def _require_module(module_name: str, install_hint: str) -> None:
 
 
 def _as_array(X: Any) -> np.ndarray:
-    if hasattr(X, "values"):
-        return np.asarray(X.values)
     if hasattr(X, "detach"):
         return np.asarray(X.detach().cpu().numpy())
+    if hasattr(X, "values"):
+        values = X.values
+        if callable(values):
+            values = values()
+        return np.asarray(values)
     return np.asarray(X)
 
 
@@ -48,7 +51,22 @@ def _split_test(
 
     mask = np.zeros(N, dtype=bool)
     if test_idx:
-        mask[np.asarray(test_idx, dtype=int)] = True
+        try:
+            numeric_idx = np.asarray(test_idx, dtype=int)
+            mask[numeric_idx] = True
+        except (TypeError, ValueError):
+            # Support passing labels for the held-out test set (for annotation)
+            # while still using the last `num_test` rows as test observations.
+            if num_test <= 0:
+                raise ValueError(
+                    "Non-numeric test_idx requires num_test > 0 so test rows can be inferred."
+                )
+            if len(test_idx) != num_test:
+                raise ValueError(
+                    "When test_idx contains labels, its length must equal num_test."
+                )
+            numeric_idx = np.arange(N - num_test, N, dtype=int)
+            mask[numeric_idx] = True
 
     X2_test = X2[mask] if test_idx else None
     probs_test = probs[mask] if test_idx else None
@@ -196,7 +214,7 @@ def _find_hotspot_representatives(
 
 def visualize_probability_distribution(
     model=None,
-    X_full,
+    X_full=None,
     T: float = 1.0,
     *,
     method: str = "pca",

@@ -1,0 +1,196 @@
+Released iPhone 16 lineup key specifications:
+- iPhone 16: battery life 22 hours video playback; screen size 6.1 inches; thickness 7.8 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 2x; ultrawide camera equipped; Geekbench multicore score 8205; RAM 8 GB; price $899.
+- iPhone 16 Plus: battery life 27 hours video playback; screen size 6.7 inches; thickness 7.8 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 2x; ultrawide camera equipped; Geekbench multicore score 8208; RAM 8 GB; price $999.
+- iPhone 16 Pro: battery life 27 hours video playback; screen size 6.3 inches; thickness 8.25 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 5x; ultrawide camera equipped; Geekbench multicore score 8581; RAM 8 GB; price $1099.
+- iPhone 16 Pro Max: battery life 33 hours video playback; screen size 6.9 inches; thickness 8.25 mm; front camera 12 MP; rear camera 48 MP; rear camera longest focal length 5x; ultrawide camera equipped; Geekbench multicore score 8504; RAM 8 GB; price $1199.
+
+Early iPhone 17 Expectations (rumored):
+Subscribe for regular MacRumors news and future iPhone 17 info.
+
+The 2025 iPhone 17
+
+We're still in the middle of the iPhone 16 release cycle, but rumors about the iPhone 17 models slated for 2025 have already started circulating and we know quite a bit about what's coming.
+
+2025 could bring one of the biggest updates to the iPhone's design that we've seen since the 2017 iPhone X, with Apple rumored to be planning for an all-new iPhone 17 "Air" that has a much thinner design, a new display size, a different look for the camera, and more.
+
+We are expecting four total models in 2025: the iPhone 17, the iPhone 17 Pro, the iPhone 17 Pro Max, and the new iPhone 17 "Air." There will be no iPhone 17 Plus, with Apple doing away with the "Plus" lineup because it has not proven popular with customers. The slimmed down iPhone 17 won't be a direct replacement for the iPhone 17 Plus, instead making a debut as a new device option in the lineup. Rumors suggest that the upcoming device will have a display that's around 6.6 inches, and a chassis that's 6mm thick or less.
+
+If we compare the iPhone lineup to the Mac and iPad lineups, the iPhone 17 Air will be comparable to the MacBook Air or the iPad Air, while the iPhone 17 Pro is the equivalent of the MacBook Pro or the iPad Pro.
+
+Because the iPhone 16 Pro and Pro Max will have 6.3-inch and 6.9-inch display sizes, the iPhone 17 Air will come in right in the middle of those two devices in terms of size. Apple may also increase the overall size of the standard iPhone 17, but if that happens, it will be 6.3 inches. It's not entirely clear if that size update is still on the horizon, or if Apple will stick with the 6.1-inch display size for the standard iPhone 17.
+
+Some early rumors suggested the slimmer iPhone 17 Air could be a high-end device that's more expensive than the iPhone 17 Pro Max, but now it's looking like it will be less expensive than the iPhone 17 Pro and Pro Max, but more expensive than the iPhone 17. In that way, it will replace the "Plus" iPhone in the lineup as a middle ground in price between the 17 and the 17 Pro.
+
+All four iPhones released in 2025 are expected to be updated with ProMotion display technology with a 120Hz maximum refresh rate for smoother scrolling and video content, which means that ProMotion will no longer be a feature limited to the Pro iPhone models. The change will be enabled by LTPO OLED displays that Apple is rumored to be using for all of the iPhone 17 models. Always-on display technology is also enabled by LTPO display technology, but it's not yet clear if always-on will come to all models or remain exclusive to the Pro iPhone models.
+
+The Ceramic Shield front-facing display could be upgraded this year, with Apple instead opting for a new anti-reflective display material that is more scratch resistant and will better resist drops and dings. Rumors suggest that the material will be an improvement over the current Ceramic Shield. We get new iPhone colors every year, and while we don't know what colors to expect for the iPhone 17 models just yet, Apple undoubtedly has something fresh in the works.
+
+For the Pro models, Apple might replace titanium with aluminum, and part of the glass frame could transition to aluminum for better durability. We've heard rumors indicating that the iPhone 17 Pro models will have a half-glass half-aluminum exterior, with the glass portion still allowing for MagSafe charging. This update could come alongside a camera design change, with Apple perhaps opting for a horizontal pill-shaped camera bump rather than the traditional square camera bump. We've also heard that the iPhone 17 Air could have a horizontal camera bump, so this may be a design change that we'll see for multiple iPhones in the lineup.
+
+As for camera updates, Apple is said to be working on an updated 24-megapixel front-facing camera with a six-element lens, and the iPhone 17 Pro Max could include an upgraded 48-megapixel Telephoto camera, which would be an improvement over the current 12-megapixel sensor. The iPhone 17 is expected to have the same Wide and Ultra Wide cameras, while the iPhone 17 Air is expected to get a single-lens 48-megapixel rear camera.
+
+At least one iPhone 17 model next year will get an Apple-designed Wi-Fi 7 chip rather than a chip manufactured by Broadcom, and it's likely to be the iPhone 17 Air. Apple is also expected to debut its own modem chip in the device, testing it instead of a Qualcomm chip. The standard iPhone 17 and the iPhone 17 Pro models are likely to continue to use Qualcomm chips.
+
+Note: See an error in this roundup or want to offer feedback? Send us an email here .
+
+Design
+
+iPhone 17
+
+This year, Apple is planning for an iPhone 17, an iPhone 17 Air, an iPhone 17 Pro, and an iPhone 17 Pro Max, but there will be no iPhone 17 Plus in the lineup. Apple is nixing the "Plus" iPhone due to subpar sales and limited customer interest in the device.
+
+The standard iPhone 17 will look a lot like the current iPhone 16, with most of the rumor focus on the iPhone 17 Air and the iPhone 17 Pro models. So far, we haven't heard much about updates that are specific to the iPhone 17, but there is a possibility for a new display size.
+
+The iPhone 17 could measure in at 6.3 inches, up from 6.1 inches, which would make it the same size as the iPhone 16 Pro. Rumors suggest that Apple plans to eliminate the Plus model in 2025, so there may be only a single lower-cost device, and at 6.3 inches, it would be in between the size of the current 6.1-inch iPhone 15 and the 6.7-inch iPhone 15 Plus. That would make the display sizes 6.3 inches, 6.6 inches (slim model), 6.3 inches (Pro) and 6.9 inches (Pro Max).
+
+The iPhone 17 Air and iPhone 17 Pro models are rumored to have a new rectangular camera bar with rounded corners, with the bar spanning the back of the iPhone. The standard iPhone 17 model is not expected to feature the same design change, and it will continue to look like the iPhone 16 with two vertical rear cameras with a pill-shaped camera bump.
+
+CAD renders said to depict the iPhone 17 lineup surfaced in February , showing off the alleged design of the iPhone 17 Air, iPhone 17, iPhone 17 Pro Max, and iPhone 17 Pro. It is not quite clear if the CAD renders are accurate, but they are in line with prior leaks suggesting the iPhone 17 Air and iPhone 17 Pro models will have new horizontal camera bump designs.
+
+There is no change to the design of the iPhone 17 camera, while the iPhone 17 Air has a single lens rear camera with an elongated bump. The iPhone 17 Pro and Pro Max feature a wide bump that houses three lenses in the same arrangement as the current design, but with a horizontal bump that adds more space between the lenses and the LiDAR and flash.
+
+3D printed mockups of the iPhone 17 models demonstrate the difference between the iPhone 17 and the Air and Pro versions.
+
+iPhone 17 'Air'
+
+Multiple rumors have suggested that Apple is working on an all-new version of the iPhone for 2025, with the device expected to have a "significantly thinner" design than current iPhone models. It won't be a direct replacement for the "Plus" iPhone that Apple has released for the last several years, but we aren't getting an iPhone 17 Plus this year in order to make room for the new iPhone 17 Air.
+
+We've heard Apple's new super thin iPhone referred to as the "iPhone 17 Slim" or the "iPhone 17 Air," but we don't know what Apple will actually call the new iPhone when it launches in 2025. iPhone 17 Air seems to make the most sense given that Apple already has a MacBook Air and an iPad Air and uses the name to distinguish those devices from higher-end Pro models.
+
+The placeholder names reference the sleeker, thinner design of the device. Rumors have not exactly agreed on size, and we've heard everything from 5mm thick to a bit over 6mm thick. With the 12.9-inch M4 iPad Pro that came out last year, Apple was able to get the size down to 5.1mm and it became the company's thinnest device to date, but there's not as much space inside the much smaller iPhone body, so Apple won't likely be able to hit that level of thinness.
+
+Bloomberg 's Mark Gurman believes the iPhone 17 Air will be about two millimeters thinner than the current iPhone 16 Pro. The iPhone 16 Pro is 8.25mm thick, so an iPhone 17 that is 2mm thinner would come in at around 6.25mm. Apple analyst Ming-Chi Kuo believes that the iPhone 17 Air will be 5.5mm thick at its thinnest point, and his wording suggests that it would have a thicker rear camera bump area that exceeds the size of the 5.5mm chassis.
+
+Analyst Jeff Pu has also suggested that the upcoming iPhone will be around 6mm thick , but The Information has said it will be between 5mm and 6mm thick . Even if we go with the thickest 6.25mm rumor, the iPhone 17 Air will be the thinnest iPhone to date. The iPhone 6, which measured in at 6.9mm, is the thinnest iPhone Apple has released so far. iPhones actually got thicker with the iPhone X and beyond, as Apple needed more space for the battery, camera lenses, Face ID hardware, and more.
+
+As for overall display size, the iPhone 17 Air is expected to fall somewhere between the iPhone 17 Pro and 17 Pro Max in size. Separate rumors have targeted 6.55 inches , 6.6 inches , and 6.65 inches as the diagonal display size that Apple has settled on, which would make it smaller than the iPhone 17 Pro Max, but larger than the 17 Pro. The Information claims the rear camera of the device will be relocated from the upper left side of the iPhone to the center of the device. The camera setup was described as a "large, centered camera bump" on the back of the device. Such a design has been seen in an alleged component leak , so it might be accurate. We've heard similar rumors about the iPhone 17 Pro. Leaker Jon Prosser shared renders of the alleged iPhone 17 Air design, with the device featuring a camera bar equipped with a single rear camera on the left and a microphone and LED flash on the right. A conceptual rendering of the iPhone 17 Air provides some insight into what the device might look like. It features a slim, 5.5mm profile and a thicker rear camera bar with single-lens camera. Apple is said to be planning to use a horizontal bar-like camera for the iPhone 17 Air, with the iPhone 17 Pro expected to adopt a similar design. For more information on the upcoming iPhone 17 Air, we have a dedicated iPhone 17 Air roundup . iPhone 17 Pro and iPhone 17 Pro Max According to The Information , the iPhone 17 Pro and iPhone 17 Pro Max will have "significant design changes." Apple is allegedly planning to eliminate the titanium frame, instead going back to aluminum . Apple has not used aluminum for a higher-end iPhone since the stainless steel iPhone X was introduced in 2017. Along with an aluminum frame, the iPhone 17 Pro models are rumored to include a half-aluminum half-glass backing rather than an all-glass back. The top half of the back will be made from aluminum, while the bottom half will continue to be made from glass to support wireless charging functionality. A partial aluminum back could make the iPhone 17 Pro models more durable to drops. Apple is planning for a larger "rectangular" camera bump that is made from aluminum rather than glass. Current camera bumps are square, so a rectangular camera bump would be a notable design change. Supply chain leaks have backed up The Information 's report about a camera design change. Leaks coming out of China suggest that the module is an "elongated oval shape," rather than a rectangular shape. While rumors have suggested the iPhone 17 Pro will have a horizontal camera layout with the aforementioned elongated oval shape, leaker Instant Digital claims that the change won't be major . The iPhone 17 Pro models may have a new camera layout, but it is described as "still triangular" rather than an elongated oval shape. The possibility of a pill-shaped camera bump with lenses arranged horizontally raises questions about how spatial video would work . Right now, spatial video uses two vertically aligned lenses, the Wide and Ultra Wide, to capture footage simultaneously. The horizontal separation between the two lenses is important because it mimics the distance between human eyes and creates depth perception. The horizontal layout that's rumored would not allow the iPhone 17 Pro lenses to shoot spatial video in landscape orientation. Apple either does not plan to adopt a horizontal layout, or it has some solution for spatial video, such as Gaussian splitting techniques. The difficulty in adapting to a new spatial video method does cast some doubt on the rumors of a camera redesign. Leaker Jon Prosser shared a render of an iPhone 17 Pro model that features a large, rectangular camera bump on the back. He claims the design is modeled after an iPhone 17 Pro that he saw, but Bloomberg 's Mark Gurman said that the render is based on a fake CAD drawing . Prosser's design shows questionable placement of the flash and the LiDAR sensor, which are typically located close to camera lenses for proper function. It is not clear why Apple would use this design, nor what the extra space would be used for, but it has also been seen in other CAD drawings. Some rumors have said the iPhone 17 Pro Max could include a smaller Dynamic Island due to the use of a "metalens" for Face ID that will take up less space and allow for a narrower construction, but Ming-Chi Kuo says there won't be changes to Dynamic Island size. Additional rumors about the iPhone 17 Pro can be found in the iPhone 17 Pro roundup .
+
+As for overall display size, the iPhone 17 Air is expected to fall somewhere between the iPhone 17 Pro and 17 Pro Max in size. Separate rumors have targeted 6.55 inches , 6.6 inches , and 6.65 inches as the diagonal display size that Apple has settled on, which would make it smaller than the iPhone 17 Pro Max, but larger than the 17 Pro.
+
+The Information claims the rear camera of the device will be relocated from the upper left side of the iPhone to the center of the device. The camera setup was described as a "large, centered camera bump" on the back of the device. Such a design has been seen in an alleged component leak , so it might be accurate. We've heard similar rumors about the iPhone 17 Pro.
+
+Leaker Jon Prosser shared renders of the alleged iPhone 17 Air design, with the device featuring a camera bar equipped with a single rear camera on the left and a microphone and LED flash on the right.
+
+A conceptual rendering of the iPhone 17 Air provides some insight into what the device might look like. It features a slim, 5.5mm profile and a thicker rear camera bar with single-lens camera. Apple is said to be planning to use a horizontal bar-like camera for the iPhone 17 Air, with the iPhone 17 Pro expected to adopt a similar design.
+
+For more information on the upcoming iPhone 17 Air, we have a dedicated iPhone 17 Air roundup .
+
+iPhone 17 Pro and iPhone 17 Pro Max
+
+According to The Information , the iPhone 17 Pro and iPhone 17 Pro Max will have "significant design changes." Apple is allegedly planning to eliminate the titanium frame, instead going back to aluminum . Apple has not used aluminum for a higher-end iPhone since the stainless steel iPhone X was introduced in 2017.
+
+Along with an aluminum frame, the iPhone 17 Pro models are rumored to include a half-aluminum half-glass backing rather than an all-glass back. The top half of the back will be made from aluminum, while the bottom half will continue to be made from glass to support wireless charging functionality. A partial aluminum back could make the iPhone 17 Pro models more durable to drops.
+
+Apple is planning for a larger "rectangular" camera bump that is made from aluminum rather than glass. Current camera bumps are square, so a rectangular camera bump would be a notable design change. Supply chain leaks have backed up The Information 's report about a camera design change. Leaks coming out of China suggest that the module is an "elongated oval shape," rather than a rectangular shape.
+
+While rumors have suggested the iPhone 17 Pro will have a horizontal camera layout with the aforementioned elongated oval shape, leaker Instant Digital claims that the change won't be major . The iPhone 17 Pro models may have a new camera layout, but it is described as "still triangular" rather than an elongated oval shape.
+
+The possibility of a pill-shaped camera bump with lenses arranged horizontally raises questions about how spatial video would work . Right now, spatial video uses two vertically aligned lenses, the Wide and Ultra Wide, to capture footage simultaneously. The horizontal separation between the two lenses is important because it mimics the distance between human eyes and creates depth perception.
+
+The horizontal layout that's rumored would not allow the iPhone 17 Pro lenses to shoot spatial video in landscape orientation. Apple either does not plan to adopt a horizontal layout, or it has some solution for spatial video, such as Gaussian splitting techniques. The difficulty in adapting to a new spatial video method does cast some doubt on the rumors of a camera redesign.
+
+Leaker Jon Prosser shared a render of an iPhone 17 Pro model that features a large, rectangular camera bump on the back. He claims the design is modeled after an iPhone 17 Pro that he saw, but Bloomberg 's Mark Gurman said that the render is based on a fake CAD drawing .
+
+Prosser's design shows questionable placement of the flash and the LiDAR sensor, which are typically located close to camera lenses for proper function. It is not clear why Apple would use this design, nor what the extra space would be used for, but it has also been seen in other CAD drawings.
+
+Some rumors have said the iPhone 17 Pro Max could include a smaller Dynamic Island due to the use of a "metalens" for Face ID that will take up less space and allow for a narrower construction, but Ming-Chi Kuo says there won't be changes to Dynamic Island size.
+
+Additional rumors about the iPhone 17 Pro can be found in the iPhone 17 Pro roundup .
+
+Thermal Upgrades
+
+The iPhone 17 Pro models will reportedly use vapor chamber cooling technology for improved thermal performance. Vapor chamber technology disperses heat across a larger surface area to prevent thermal throttling and to keep performance stable, and it could be a benefit for Apple's high-powered A19 chip.
+
+While this could be a feature limited to the iPhone 17 Pro, there has been a rumor suggesting that Apple will use a vapor chamber heatsink to improve thermal performance across all iPhone 17 models.
+
+Display
+
+There are a few enhancements coming to the iPhone 17's display, with Apple adding a new coating and planning to bring Pro features to standard models.
+
+The iPhone 17 and iPhone 17 Air are expected to use the same OLED panel as the current iPhone 16 Pro models, which is sourced from Samsung. The panel has a 30 percent increase in brightness and improved longevity compared to the prior-generation iPhone 16 display.
+
+ProMotion and Always-On
+
+The 120Hz "ProMotion" refresh rate has been limited to the Pro versions of the iPhone for several years, but in 2025, it is expected to expand to the entire iPhone lineup . Multiple rumors suggest that the iPhone 17 and iPhone 17 Air models will include ProMotion support in addition to the iPhone 17 Pro models. ProMotion refresh rates would potentially allow for always-on display functionality, but it is not clear if this is a feature that Apple would expand to the entire lineup.
+
+Apple will use low-temperature polycrystalline oxide (LTPO) panels for all iPhone 17 models, which is what enables ProMotion thanks to better power efficiency. ProMotion enables refresh rates ranging from 1Hz to 120Hz, and at the high end, the 120Hz refresh rate provides smoother scrolling and video content.
+
+With all four iPhones slated to get ProMotion displays in 2025, ProMotion refresh rates will no longer be a feature that sets the Pro iPhone models apart.
+
+Tougher Coating
+
+Rumors suggest the iPhone 17 lineup will get an anti-reflective display that is more scratch resistant than the Ceramic Shield used for current iPhone models.
+
+Apple is planning for a "super-hard anti-reflective layer" that is better able to stand up to wear and tear.
+
+A-Series Chip
+
+It sounds like iPhone 17 series won't get TSMC's next-generation 2-nanometer chips , but we are expecting A19 chip technology that's likely built on an upgraded 3-nanometer process. Apple typically upgrades iPhones with faster and more efficient chip technology each year.
+
+The iPhone 17 Pro and iPhone 17 Pro Max are expected to include an A19 Pro chip, while the iPhone 17 and the iPhone 17 slim could have the standard A19 chip.
+
+TSMC is working on its N3P process, with mass production set to begin in late 2024, so that's the chip technology that we're expecting Apple will use for the iPhone 17 lineup. Compared to earlier versions of 3nm chips, the N3P chips offer increased performance efficiency and increased transistor density.
+
+RAM
+
+The higher-end iPhone 17 models could include 12GB RAM, while the standard iPhone 17 model is expected to have 8GB. 12GB RAM would be a 4GB increase over the iPhone 15 Pro models, while 8GB RAM would be a 2GB increase over the standard iPhone 15 models.
+
+Apple analyst Ming-Chi Kuo believes that the the 12GB RAM upgrade will be limited to the iPhone 17 Pro Max, with the other models set to feature 8GB RAM. Analyst Jeff Pu has suggested the iPhone 17 slim will have 8GB RAM, and the iPhone 17 Pro models will have 12GB RAM .
+
+Apple-Designed 5G Modem Chip
+
+The iPhone 17 Air is expected to be one of the first iPhones to get an Apple-designed 5G modem, with Apple continuing to use Qualcomm modems for the other iPhone 17 models.
+
+Apple's modem chip will be capable of theoretical 5G download speeds of up to 4Gb/s, which is slower than Qualcomm's modems in current phones. The chip will not support the fastest mmWave 5G, and will instead be limited to sub-6GHz 5G.
+
+SIM Tray
+
+Apple will remove the physical SIM slot on iPhones in more countries next year, though it is not yet clear which countries. Apple did away with the SIM card tray in the United States with the iPhone 14 models, but a physical SIM has so far been present on iPhones sold outside of the United States.
+
+The iPhone 17 Air is expected to lack a SIM tray entirely because of how thin it is.
+
+Bluetooth and Wi-Fi Chip
+
+All four iPhone 17 models that are coming in 2025 will have Apple's first custom-designed Wi-Fi chip with Wi-Fi 7 support. Wi-Fi 7 is already used in the iPhone 16 models, but Apple's chip design could bring additional efficiency and connectivity improvements , and it paves the way for a future all-in-one SoC.
+
+Apple is aiming to create a wireless setup where the components are tightly integrated and more energy efficient, which will let the company cut down on the battery use of cellular, Wi-Fi, and Bluetooth technologies.
+
+Wi-Fi 7 supports data transmission over 2.4GHz, 5GHz, and 6GHz band simultaneously for faster speeds and lower latency with a supported router. Wi-Fi 7 supports peak speeds of more than 40Gb/s. Bluetooth 5.3 is also expected.
+
+Battery and Charging
+
+The upcoming iPhone 17 Pro and iPhone 17 Pro Max could have batteries that are easier to remove , adopting the same technology Apple introduced in the iPhone 16 and 16 Plus. The iPhone 16 and 16 Plus use a type of adhesive that can be loosened with a low-voltage electrical current, but the 16 Pro and Pro Max have standard adhesive.
+
+Next year, all iPhone 17 models might have the new, easier to remove adhesive, which makes battery replacements simpler.
+
+The iPhone 17 models are expected to support up to 35W wired charging speeds , which means there would be no change from the current charging maximum.
+
+Camera Updates
+
+All of the iPhone 17 models are expected to have a 24-megapixel front-facing camera with a six-element lens, which would be an upgrade over the current 12-megapixel selfie camera. A higher number of megapixels allows for more detail and clearer images when cropping in.
+
+The iPhone 17 Pro Max is expected to feature a 48-megapixel Wide camera, a 48-megapixel Ultra Wide camera, and a 48-megapixel Tetraprism Telephoto camera, which will make it the first iPhone to feature three 48-megapixel cameras . The iPhone 17 Air is expected to have a single-lens 48-megapixel rear camera.
+
+At least one iPhone 17 model next year will feature a mechanical aperture that will let users adjust the size of the iPhone 17's aperture, changing the amount of light reaching the lens. Current iPhone models have fixed apertures, but a variable aperture will let images be captured with shallow depth-of-field.
+
+The iPhone 17 Pro and iPhone 17 Pro Max will continue to include a 5x Telephoto optical zoom lens, and it will still be a Pro-exclusive feature. The standard iPhone 17 and the iPhone 17 Air will not have the 5x zoom.
+
+Pricing
+
+According to The Wall Street Journal , the iPhone 17 Air will be priced more affordably than the iPhone 17 Pro models.
+
+Pricing on the iPhone 17 Pro will start at $999.
+
+iPhone 17 Launch Date
+
+The iPhone 17 models are expected to come out in September 2025, and they will follow the 2024 iPhone 16 models.
+
+After the iPhone 17
+
+The iPhone 18 Pro expected in 2026 could have a main rear camera with a variable aperture . A variable aperture lens would allow the iPhone to perform more like a DSLR camera, providing users with more manual control over the amount of light entering the lens.
+
+A variable aperture lens would be able to better adjust to different lighting conditions, and it would also allow for more control over depth of field for sharper focus on subjects and smoother background blur.
+
+The iPhone 18 Pro models could include the C2 chip , an upgraded version of Apple's C1 modem. The C2 is expected to feature improved power consumption and transmission speed, and it will include mmWave 5G support.
+
+Rumors suggest that Apple could introduce its first foldable iPhone in 2026 or 2027.
