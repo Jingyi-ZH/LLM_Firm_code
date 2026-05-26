@@ -271,23 +271,7 @@ Training entry point:
 python scripts/run_training.py --help
 ```
 
-## Notebooks
-
-Notebooks are exploratory analysis artifacts. The most relevant groups are:
-
-- `notebooks/model_training/`
-- `notebooks/interpretability/`
-- `notebooks/result_analysis/`
-- `iPhone17/study3_analysis.ipynb`
-
 Some older notebooks may depend on local analysis modules or generated files that are not part of the cleaned replication package. Prefer the core package modules and documented scripts for rerunnable workflows.
-
-## Notes For Maintainers
-
-- Do not commit `.env`, API keys, local virtual environments, caches, or generated logs.
-- Keep `__init__.py` files tracked; they define the Python package structure.
-- Use `.env.example` for credential templates.
-- Use `git rm --cached <path>` when removing generated files from tracking but keeping them locally.
 
 ## License
 
