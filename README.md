@@ -1,4 +1,4 @@
-# LLM Belief Elicitation
+# Can Large Language Models Predict Firms’ New Product Launches?
 
 This repository contains the code and supporting artifacts for eliciting product-specification beliefs from large language models using pairwise conjoint-style comparisons.
 
@@ -282,8 +282,8 @@ MIT License. See `LICENSE`.
 If you use this code in research, please cite the associated paper or repository:
 
 ```bibtex
-@misc{llm_belief_elicitation,
-  title = {LLM Belief Elicitation},
+@misc{llm_product_launch_pred,
+  title = {Can Large Language Models Predict Firms’ New Product Launches?},
   author = {},
   year = {},
   url = {}
