@@ -52,6 +52,7 @@ openai:
   model: "gpt-5-nano"
   temperature: 1.0
   reasoning_effort: "medium"
+  reasoning_model_prefixes: ["gpt-5", "o"]
   api_key_env_var: "OPENAI_API_KEY"
   logprobs:
     enabled: false

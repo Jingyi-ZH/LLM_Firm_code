@@ -339,6 +339,16 @@ Examples:
         help="Override reasoning effort (optional)",
     )
     parser.add_argument(
+        "--model",
+        type=str,
+        help="Override the non-logprobs OpenAI model from config (optional)",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        help="Override the non-logprobs sampling temperature from config (optional)",
+    )
+    parser.add_argument(
         "--logprobs",
         choices=["on", "off"],
         default=None,
@@ -391,6 +401,8 @@ Examples:
                     collector = PairwiseCollector(
                         api_key_env_var=env_var,
                         logprobs=args.logprobs,
+                        model=args.model,
+                        temperature=args.temperature,
                     )
                     futures.append(
                         executor.submit(
@@ -409,6 +421,8 @@ Examples:
         collector = PairwiseCollector(
             api_key_env_var=args.api_key_env,
             logprobs=args.logprobs,
+            model=args.model,
+            temperature=args.temperature,
         )
         output_path = collector.collect_basic(
             start_idx=args.start,
@@ -462,6 +476,8 @@ Examples:
                 shard_collector = PairwiseCollector(
                     api_key_env_var=env_var,
                     logprobs=args.logprobs,
+                    model=args.model,
+                    temperature=args.temperature,
                 )
                 shard_outputs: List[Path] = []
                 for rid, profile in shard_profiles:
@@ -504,6 +520,8 @@ Examples:
         collector = PairwiseCollector(
             api_key_env_var=args.api_key_env,
             logprobs=args.logprobs,
+            model=args.model,
+            temperature=args.temperature,
         )
         if csv_profiles is not None:
             if output_file:
@@ -572,6 +590,8 @@ Examples:
         collector = PairwiseCollector(
             api_key_env_var=args.api_key_env,
             logprobs=args.logprobs,
+            model=args.model,
+            temperature=args.temperature,
         )
         output_path = collector.collect_allcomb(
             real_profiles=csv_profiles,
@@ -584,6 +604,8 @@ Examples:
         collector = PairwiseCollector(
             api_key_env_var=args.api_key_env,
             logprobs=args.logprobs,
+            model=args.model,
+            temperature=args.temperature,
         )
         output_path = collector.collect_top(
             real_profile_id=args.real_profile,
@@ -595,6 +617,8 @@ Examples:
         collector = PairwiseCollector(
             api_key_env_var=args.api_key_env,
             logprobs=args.logprobs,
+            model=args.model,
+            temperature=args.temperature,
         )
         output_path = collector.collect_context_fixreal(
             real_profile_id=args.real_profile,
@@ -609,6 +633,8 @@ Examples:
         collector = PairwiseCollector(
             api_key_env_var=args.api_key_env,
             logprobs=args.logprobs,
+            model=args.model,
+            temperature=args.temperature,
         )
         output_path = collector.collect_rag_fixreal(
             real_profile_id=args.real_profile,
@@ -626,6 +652,8 @@ Examples:
         collector = PairwiseCollector(
             api_key_env_var=args.api_key_env,
             logprobs=args.logprobs,
+            model=args.model,
+            temperature=args.temperature,
         )
         output_path = collector.collect_questions_csv(
             question_csv=args.question_csv,

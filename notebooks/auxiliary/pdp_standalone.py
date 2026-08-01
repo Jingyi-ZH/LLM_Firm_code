@@ -139,24 +139,20 @@ def _draw_pdp1d_axis(
     cat_h = {}
     if is_cat:
         x = np.arange(len(pdp))
-        bars = ax.bar(x, pdp["pdp"], alpha=0.15)
-        for bar in bars:
-            h = bar.get_height()
-            xc = bar.get_x() + bar.get_width() / 2
-            cat_h[str(pdp.iloc[int(round(xc))][feature])] = h
-            half_width = bar.get_width() / 2
-            ax.plot([xc - half_width, xc + half_width], [h, h], lw=2, color="#1f77b4")
+        for xi, (_, row) in zip(x, pdp.iterrows()):
+            h = float(row["pdp"])
+            cat_h[str(row[feature])] = h
+            ax.plot([xi - 0.4, xi + 0.4], [h, h], lw=3, color="#1f77b4")
         ax.set_xticks(x)
         ax.set_xticklabels([str(v) for v in pdp[feature]], rotation=0, ha="center")
         ax.set_xlabel("Category", fontsize=label_fontsize)
     else:
         x = pdp[feature].astype(float).to_numpy()
         y = pdp["pdp"].astype(float).to_numpy()
-        ax.plot(x, y, lw=2)
-        ax.fill_between(x, y, alpha=0.15)
+        ax.plot(x, y, lw=3, color="#1f77b4")
         ax.set_xlabel(f"{feature.capitalize()}", fontsize=label_fontsize)
 
-    ax.set_title(f"{feature.capitalize()}", loc="left", fontsize=title_fontsize)
+    ax.set_title(f"{feature.capitalize()}", loc="left", fontsize=title_fontsize, fontweight="bold")
     if tick_fontsize is not None:
         ax.tick_params(axis="both", which="major", labelsize=tick_fontsize)
     ax.set_ylim(y_min, y_max)

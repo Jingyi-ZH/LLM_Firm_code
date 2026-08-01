@@ -58,6 +58,8 @@ class PairwiseCollector:
         api_key_env_var: Optional[str] = None,
         api_key: Optional[str] = None,
         logprobs: Optional[str] = None,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
     ):
         """Initialize the collector.
 
@@ -66,9 +68,21 @@ class PairwiseCollector:
                            If not provided, uses config default.
         """
         self.cfg = get_config()
-        self.model = self.cfg.get('openai', 'model')
-        self.temperature = self.cfg.get('openai', 'temperature')
+        self.model = model or self.cfg.get('openai', 'model')
+        self.temperature = (
+            temperature
+            if temperature is not None
+            else self.cfg.get('openai', 'temperature')
+        )
         self.reasoning_effort = self.cfg.get('openai', 'reasoning_effort', default='medium')
+        self.reasoning_model_prefixes = tuple(
+            str(prefix).lower()
+            for prefix in self.cfg.get(
+                "openai",
+                "reasoning_model_prefixes",
+                default=["gpt-5", "o"],
+            )
+        )
         logprobs_cfg = self.cfg.get("openai", "logprobs", default={})
         default_logprobs_enabled = bool(logprobs_cfg.get("enabled", False))
         if logprobs is None:
@@ -213,12 +227,15 @@ class PairwiseCollector:
                 prob_chosen, prob_nochosen = self._extract_logprobs(response, text)
                 return text, prob_chosen, prob_nochosen
 
-            response = self.client.responses.create(
-                model=self.model,
-                input=prompt,
-                temperature=self.temperature,
-                reasoning={"effort": effort},
-            )
+            kwargs = {
+                "model": self.model,
+                "input": prompt,
+                "temperature": self.temperature,
+            }
+            model_name = str(self.model or "").lower()
+            if model_name.startswith(self.reasoning_model_prefixes):
+                kwargs["reasoning"] = {"effort": effort}
+            response = self.client.responses.create(**kwargs)
             return response.output_text, None, None
         except PermissionDeniedError as err:
             # Avoid dumping prompt contents; provide actionable config hints instead.
@@ -310,12 +327,15 @@ class PairwiseCollector:
                 prob_yes, prob_no = self._extract_label_probabilities(response, ("Y", "N"))
                 return text, prob_yes, prob_no
 
-            response = self.client.responses.create(
-                model=self.model,
-                input=prompt,
-                temperature=self.temperature,
-                reasoning={"effort": effort},
-            )
+            kwargs = {
+                "model": self.model,
+                "input": prompt,
+                "temperature": self.temperature,
+            }
+            model_name = str(self.model or "").lower()
+            if model_name.startswith(self.reasoning_model_prefixes):
+                kwargs["reasoning"] = {"effort": effort}
+            response = self.client.responses.create(**kwargs)
             return response.output_text, None, None
         except PermissionDeniedError as err:
             body = getattr(err, "body", None)
